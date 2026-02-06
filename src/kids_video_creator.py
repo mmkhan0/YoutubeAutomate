@@ -84,7 +84,8 @@ class KidsVideoCreator:
         voiceover_path: str,
         output_filename: Optional[str] = None,
         background_music: Optional[str] = None,
-        title: Optional[str] = None
+        title: Optional[str] = None,
+        image_durations: Optional[List[float]] = None
     ) -> str:
         """
         Create a complete video from images and audio.
@@ -95,6 +96,9 @@ class KidsVideoCreator:
             output_filename: Output video filename (default: auto-generated)
             background_music: Optional path to background music file
             title: Optional video title for metadata
+            image_durations: Optional list of duration (seconds) for each image.
+                            If None, divides audio duration equally.
+                            If provided, must match length of images list.
 
         Returns:
             str: Path to created video file
@@ -117,6 +121,14 @@ class KidsVideoCreator:
         if background_music and not Path(background_music).exists():
             raise ValueError(f"Background music file not found: {background_music}")
 
+        # Validate image_durations if provided
+        if image_durations is not None:
+            if len(image_durations) != len(images):
+                raise ValueError(
+                    f"image_durations length ({len(image_durations)}) "
+                    f"must match images length ({len(images)})"
+                )
+
         self.logger.info(f"Creating video with {len(images)} images")
 
         # Generate output filename if not provided
@@ -137,21 +149,29 @@ class KidsVideoCreator:
 
         self.logger.info(f"Voiceover duration: {audio_duration:.2f} seconds")
 
-        # Calculate duration per image
-        duration_per_image = audio_duration / len(images)
-        self.logger.info(f"Duration per image: {duration_per_image:.2f} seconds")
+        # Use custom durations or calculate equal distribution
+        if image_durations:
+            durations_list = image_durations
+            self.logger.info("Using custom image durations (synced to script sections)")
+            for i, dur in enumerate(durations_list, 1):
+                self.logger.info(f"  Image {i}: {dur:.2f}s")
+        else:
+            # Calculate duration per image (equal distribution)
+            duration_per_image = audio_duration / len(images)
+            durations_list = [duration_per_image] * len(images)
+            self.logger.info(f"Duration per image: {duration_per_image:.2f} seconds (equal distribution)")
 
         # Create video
         try:
             if background_music:
                 self._create_video_with_music(
                     images, voiceover_path, background_music,
-                    output_path, duration_per_image, audio_duration
+                    output_path, durations_list, audio_duration
                 )
             else:
                 self._create_video_simple(
                     images, voiceover_path,
-                    output_path, duration_per_image, audio_duration
+                    output_path, durations_list, audio_duration
                 )
 
             # Verify output file was created
@@ -218,7 +238,7 @@ class KidsVideoCreator:
         images: List[str],
         voiceover_path: str,
         output_path: Path,
-        duration_per_image: float,
+        image_durations: List[float],
         total_duration: float
     ) -> None:
         """
@@ -228,20 +248,20 @@ class KidsVideoCreator:
             images: List of image paths
             voiceover_path: Path to voiceover audio
             output_path: Output video path
-            duration_per_image: Duration to show each image
+            image_durations: List of durations for each image
             total_duration: Total video duration
         """
         self.logger.info("Creating video (voiceover only)")
 
         # Build filter complex for images
-        filter_complex = self._build_image_filter(images, duration_per_image)
+        filter_complex = self._build_image_filter(images, image_durations)
 
         # Build FFmpeg command
         cmd = [self.ffmpeg_path, '-y']
 
-        # Add image inputs
-        for image in images:
-            cmd.extend(['-loop', '1', '-t', str(duration_per_image), '-i', image])
+        # Add image inputs with their specific durations
+        for image, duration in zip(images, image_durations):
+            cmd.extend(['-loop', '1', '-t', str(duration), '-i', image])
 
         # Add audio input
         cmd.extend(['-i', voiceover_path])
@@ -279,7 +299,7 @@ class KidsVideoCreator:
         voiceover_path: str,
         music_path: str,
         output_path: Path,
-        duration_per_image: float,
+        image_durations: List[float],
         total_duration: float
     ) -> None:
         """
@@ -290,13 +310,13 @@ class KidsVideoCreator:
             voiceover_path: Path to voiceover audio
             music_path: Path to background music
             output_path: Output video path
-            duration_per_image: Duration to show each image
+            image_durations: List of durations for each image (in seconds)
             total_duration: Total video duration
         """
         self.logger.info("Creating video (voiceover + background music)")
 
         # Build filter complex for images
-        image_filter = self._build_image_filter(images, duration_per_image)
+        image_filter = self._build_image_filter(images, image_durations)
 
         # Build audio mixing filter
         # Loop music if needed, adjust volume, and mix with voiceover
@@ -312,9 +332,9 @@ class KidsVideoCreator:
         # Build FFmpeg command
         cmd = [self.ffmpeg_path, '-y']
 
-        # Add image inputs
-        for image in images:
-            cmd.extend(['-loop', '1', '-t', str(duration_per_image), '-i', image])
+        # Add image inputs with their specific durations
+        for image, duration in zip(images, image_durations):
+            cmd.extend(['-loop', '1', '-t', str(duration), '-i', image])
 
         # Add audio inputs
         cmd.extend(['-i', voiceover_path])
@@ -350,14 +370,14 @@ class KidsVideoCreator:
     def _build_image_filter(
         self,
         images: List[str],
-        duration_per_image: float
+        image_durations: List[float]
     ) -> str:
         """
         Build FFmpeg filter complex for image processing with transitions.
 
         Args:
             images: List of image paths
-            duration_per_image: Duration to show each image
+            image_durations: List of durations for each image (in seconds)
 
         Returns:
             str: FFmpeg filter complex string
@@ -366,6 +386,8 @@ class KidsVideoCreator:
 
         # Process each image
         for i in range(len(images)):
+            duration = image_durations[i]
+            
             # Scale to fit within output resolution, pad to exact size, apply zoom
             # Note: Scale to output size first, then pad maintains aspect ratio
             filter_str = (
@@ -380,7 +402,7 @@ class KidsVideoCreator:
             # Add slight zoom effect using zoompan filter
             # CRITICAL: d= is number of FRAMES, not seconds!
             if self.ZOOM_FACTOR > 1.0:
-                frames_per_image = int(duration_per_image * self.OUTPUT_FPS)
+                frames_per_image = int(duration * self.OUTPUT_FPS)
                 filter_str += (
                     f",zoompan=z='min(zoom+0.0002,{self.ZOOM_FACTOR})':"
                     f"d={frames_per_image}:s={self.OUTPUT_WIDTH}x{self.OUTPUT_HEIGHT}"
@@ -397,8 +419,13 @@ class KidsVideoCreator:
             # Variety of transition effects for visual interest
             transitions = ['fade', 'wipeleft', 'wiperight', 'slideleft', 'slideright', 'smoothleft', 'smoothright', 'circleopen', 'circleclose']
 
+            # Calculate cumulative offsets for transitions
+            cumulative_offset = 0.0
+            
             for i in range(1, len(images)):
-                fade_start = duration_per_image - self.FADE_DURATION
+                # Fade starts before end of current image
+                prev_duration = image_durations[i - 1]
+                fade_start = cumulative_offset + prev_duration - self.FADE_DURATION
 
                 # Select transition type (varied but mostly fade for simplicity)
                 # Use fade for most, special transitions occasionally
@@ -423,6 +450,9 @@ class KidsVideoCreator:
                     fade_filter += f"[vt{i}]"
                     filters.append(fade_filter)
                     current = f"[vt{i}]"
+                
+                # Update cumulative offset for next transition
+                cumulative_offset += prev_duration
         else:
             # Single image, no transitions
             filters.append(f"[v0]copy[outv]")

@@ -22,7 +22,7 @@ import traceback
 import functools
 from pathlib import Path
 from datetime import datetime, timedelta
-from typing import Dict, Any, Optional, Callable
+from typing import Dict, Any, Optional, Callable, List
 
 # Fix Windows console encoding for emoji/unicode in log messages
 if sys.platform == 'win32':
@@ -945,6 +945,97 @@ class YouTubeAutomationOrchestrator:
             self.logger.error(f"✗ Voiceover generation failed: {e}")
             return False
 
+    def _extract_section_durations(self) -> Optional[List[float]]:
+        """
+        Extract section durations from script to sync images with narration.
+        Handles cases where multiple images are generated per section by
+        distributing section duration equally among images from that section.
+
+        Returns:
+            List[float]: List of durations (in seconds) for each image,
+                        or None if extraction fails (will use equal distribution)
+        """
+        try:
+            script = self.session_data.get('script')
+            images = self.session_data.get('images', [])
+            
+            if not script or not images:
+                self.logger.warning("No script or images found, using equal distribution")
+                return None
+
+            # Extract section durations
+            section_durations = []
+
+            # Add intro duration
+            if hasattr(script, 'intro') and script.intro:
+                section_durations.append(float(script.intro.duration_seconds))
+
+            # Add body section durations
+            if hasattr(script, 'body_sections') and script.body_sections:
+                for section in script.body_sections:
+                    section_durations.append(float(section.duration_seconds))
+
+            # Add outro duration
+            if hasattr(script, 'outro') and script.outro:
+                section_durations.append(float(section.outro.duration_seconds))
+
+            num_sections = len(section_durations)
+            num_images = len(images)
+
+            # Case 1: Exact match (1 image per section)
+            if num_sections == num_images:
+                self.logger.info(f"✓ Perfect match: {num_sections} sections = {num_images} images")
+                return section_durations
+
+            # Case 2: More images than sections (multiple images per section)
+            if num_images > num_sections:
+                self.logger.info(
+                    f"Distributing {num_sections} section durations across {num_images} images..."
+                )
+                
+                # Calculate how many images per section (approximately)
+                images_per_section = num_images / num_sections
+                
+                # Distribute section durations proportionally to images
+                image_durations = []
+                images_assigned = 0
+                
+                for i, section_dur in enumerate(section_durations):
+                    # Calculate how many images for this section
+                    if i == num_sections - 1:
+                        # Last section gets all remaining images
+                        section_images = num_images - images_assigned
+                    else:
+                        # Round to nearest integer
+                        section_images = round((i + 1) * images_per_section) - images_assigned
+                        section_images = max(1, section_images)  # At least 1 image per section
+                    
+                    # Distribute section duration equally among its images
+                    dur_per_image = section_dur / section_images
+                    
+                    for _ in range(section_images):
+                        image_durations.append(dur_per_image)
+                    
+                    images_assigned += section_images
+                    self.logger.info(
+                        f"  Section {i+1}: {section_dur:.1f}s → {section_images} images "
+                        f"({dur_per_image:.1f}s each)"
+                    )
+
+                return image_durations
+
+            # Case 3: Fewer images than sections (shouldn't happen, but handle it)
+            else:
+                self.logger.warning(
+                    f"Unexpected: {num_images} images < {num_sections} sections. "
+                    f"Using equal distribution."
+                )
+                return None
+
+        except Exception as e:
+            self.logger.warning(f"Failed to extract section durations: {e}. Using equal distribution.")
+            return None
+
     def _step_create_video(self) -> bool:
         """
         Step 5: Create video from images/videos and audio.
@@ -994,12 +1085,16 @@ class YouTubeAutomationOrchestrator:
                 self.logger.warning(f"⚠️ Background music mixing failed: {e}. Using original voiceover.")
                 voiceover_to_use = self.session_data['voiceover_path']
 
+            # Extract section durations from script for proper image sync
+            image_durations = self._extract_section_durations()
+
             video_path = creator.create_video(
                 images=self.session_data['images'],
                 voiceover_path=voiceover_to_use,
                 background_music=None,  # Already in audio
                 output_filename=f"video_{datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4",
-                title=self.session_data['topic']
+                title=self.session_data['topic'],
+                image_durations=image_durations
             )
 
             self.session_data['video_path'] = video_path
