@@ -58,7 +58,7 @@ TEST_SCRIPTS = {
             }
         ]
     },
-    
+
     "Learning Colors with Rainbow Animals": {
         "topic": "Learning Colors with Rainbow Animals",
         "total_duration": 240,
@@ -146,7 +146,7 @@ Parents: This video teaches basic plant biology in a simple, engaging way for ag
         ],
         "category": 27
     },
-    
+
     "Learning Colors with Rainbow Animals": {
         "title": "Learning Colors with Rainbow Animals 🌈 Fun for Kids",
         "description": """Let's learn colors with cute rainbow animals! 🐦🐠🦋
@@ -190,10 +190,10 @@ def get_test_topic():
 def get_test_script(topic):
     """
     Get a test script for a topic.
-    
+
     Args:
         topic: Topic string
-        
+
     Returns:
         dict: Script data in VideoScript format
     """
@@ -208,10 +208,10 @@ def get_test_script(topic):
 def get_test_metadata(topic):
     """
     Get test metadata for a topic.
-    
+
     Args:
         topic: Topic string
-        
+
     Returns:
         dict: Metadata dictionary
     """

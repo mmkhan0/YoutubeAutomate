@@ -22,7 +22,7 @@ from openai import OpenAI, OpenAIError
 class KidsTopicSelector:
     """
     Selects technology and science video topics for educational content.
-    
+
     Focuses on:
     - How computers and technology work
     - Internet, WiFi, and digital communication
@@ -32,28 +32,28 @@ class KidsTopicSelector:
     - Programming and coding concepts
     - Energy, batteries, and power systems
     - Gaming technology and 3D graphics
-    
+
     Avoids:
     - Specific brand names (Apple, Google, Microsoft products)
     - Copyrighted content
     - Complex technical jargon
     - Product reviews or comparisons
     """
-    
+
     # Age range for content
     MIN_AGE = 4
     MAX_AGE = 8
-    
+
     # Maximum retry attempts for API calls
     MAX_RETRIES = 3
-    
+
     # Initial retry delay in seconds
     RETRY_DELAY = 1
-    
+
     def __init__(self, api_key: str, model: str = "gpt-4o-mini", temperature: float = 0.8, category: str = 'auto'):
         """
         Initialize the topic selector.
-        
+
         Args:
             api_key: OpenAI API key
             model: OpenAI model to use (default: gpt-4o-mini)
@@ -65,23 +65,23 @@ class KidsTopicSelector:
         self.temperature = temperature
         self.category = category
         self.logger = logging.getLogger(__name__)
-    
+
     def select_topic(self) -> str:
         """
         Select a single kids-friendly video topic.
-        
+
         Returns:
             str: A video topic suitable for ages 4-8
-            
+
         Raises:
             RuntimeError: If topic selection fails after all retries
         """
         self.logger.info(f"Selecting {self.category} topic for educational content")
-        
+
         for attempt in range(1, self.MAX_RETRIES + 1):
             try:
                 topic = self._generate_topic_with_ai()
-                
+
                 # Validate the topic
                 if self._is_valid_topic(topic):
                     self.logger.info(f"Selected topic: {topic}")
@@ -89,10 +89,10 @@ class KidsTopicSelector:
                 else:
                     self.logger.warning(f"Invalid topic generated: {topic}. Retrying...")
                     continue
-                    
+
             except OpenAIError as e:
                 self.logger.error(f"OpenAI API error (attempt {attempt}/{self.MAX_RETRIES}): {e}")
-                
+
                 if attempt < self.MAX_RETRIES:
                     delay = self.RETRY_DELAY * (2 ** (attempt - 1))  # Exponential backoff
                     self.logger.info(f"Retrying in {delay} seconds...")
@@ -101,30 +101,30 @@ class KidsTopicSelector:
                     # Use fallback topic if all attempts failed
                     self.logger.warning("All API attempts failed, using fallback topic")
                     return self._get_fallback_topic()
-                    
+
             except Exception as e:
                 self.logger.error(f"Unexpected error (attempt {attempt}/{self.MAX_RETRIES}): {e}")
-                
+
                 if attempt < self.MAX_RETRIES:
                     delay = self.RETRY_DELAY * (2 ** (attempt - 1))
                     time.sleep(delay)
                 else:
                     # Fallback to safe default topic
                     return self._get_fallback_topic()
-        
+
         # Should not reach here, but provide fallback
         return self._get_fallback_topic()
-    
+
     def _generate_topic_with_ai(self) -> str:
         """
         Generate a topic using OpenAI API.
-        
+
         Returns:
             str: Generated topic
         """
         prompt = self._build_prompt()
         system_message = self._get_system_message()
-        
+
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[
@@ -140,18 +140,18 @@ class KidsTopicSelector:
             temperature=self.temperature,
             max_tokens=100
         )
-        
+
         topic = response.choices[0].message.content.strip()
-        
+
         # Remove quotes if present
         topic = topic.strip('"\'')
-        
+
         return topic
-    
+
     def _get_system_message(self) -> str:
         """
         Get the system message based on category.
-        
+
         Returns:
             str: System message for OpenAI
         """
@@ -187,11 +187,11 @@ class KidsTopicSelector:
                 "Focus on educational content suitable for all ages. "
                 "Never suggest copyrighted characters or branded content."
             )
-    
+
     def _build_prompt(self) -> str:
         """
         Build the prompt for topic generation based on category.
-        
+
         Returns:
             str: Prompt for OpenAI
         """
@@ -203,7 +203,7 @@ class KidsTopicSelector:
             return self._build_science_prompt()
         else:  # auto
             return self._build_tech_prompt()  # Default to tech
-    
+
     def _build_tech_prompt(self) -> str:
         """Build tech category prompt."""
         return f"""Generate ONE educational and engaging YouTube video topic about TECHNOLOGY, COMPUTERS, or HOW THINGS WORK.
@@ -230,7 +230,7 @@ Great topic categories:
 Return ONLY the video topic as a single line of text. No explanations, no quotes around it, just the topic.
 
 Topic:"""
-    
+
     def _build_kids_prompt(self) -> str:
         """Build kids category prompt."""
         return f"""Generate ONE educational and engaging YouTube video topic for children aged 4-8 years.
@@ -256,7 +256,7 @@ Great topic categories:
 Return ONLY the video topic as a single line of text. No explanations, no quotes around it, just the topic.
 
 Topic:"""
-    
+
     def _build_science_prompt(self) -> str:
         """Build science category prompt."""
         return f"""Generate ONE educational and engaging YouTube video topic about SCIENCE and HOW NATURE WORKS.
@@ -283,23 +283,23 @@ Great topic categories:
 Return ONLY the video topic as a single line of text. No explanations, no quotes around it, just the topic.
 
 Topic:"""
-    
+
     def _is_valid_topic(self, topic: str) -> bool:
         """
         Validate that a topic is safe and appropriate.
-        
+
         Args:
             topic: Topic string to validate
-            
+
         Returns:
             bool: True if valid, False otherwise
         """
         if not topic or len(topic) < 10:
             return False
-        
+
         if len(topic) > 100:
             return False
-        
+
         # Check for banned terms (copyrighted characters and brands)
         banned_terms = [
             'disney', 'marvel', 'mickey', 'minnie', 'elsa', 'frozen', 'spider-man', 'spiderman',
@@ -309,25 +309,25 @@ Topic:"""
             'barbie', 'mattel', 'lego', 'hasbro', 'nerf', 'hot wheels',
             'dora', 'spongebob', 'transformers', 'star wars', 'harry potter'
         ]
-        
+
         topic_lower = topic.lower()
-        
+
         for term in banned_terms:
             if term in topic_lower:
                 self.logger.warning(f"Topic contains banned term '{term}': {topic}")
                 return False
-        
+
         return True
-    
+
     def _get_fallback_topic(self) -> str:
         """
         Get a safe fallback topic if AI generation fails.
-        
+
         Returns:
             str: Safe default topic
         """
         import random
-        
+
         if self.category == 'tech':
             fallback_topics = [
                 "How Does the Internet Work? A Simple Explanation",
@@ -395,61 +395,61 @@ Topic:"""
                 "How Do Plants Make Food from Sunlight?",
                 "Learning to Count from 1 to 20"
             ]
-        
+
         topic = random.choice(fallback_topics)
         self.logger.info(f"Using fallback topic: {topic}")
-        
+
         return topic
-    
+
     def select_multiple_topics(self, count: int = 5) -> list:
         """
         Select multiple unique topics at once.
-        
+
         Args:
             count: Number of topics to generate (default: 5)
-            
+
         Returns:
             list: List of unique topic strings
         """
         topics = []
         attempts = 0
         max_attempts = count * 3  # Allow some retries
-        
+
         while len(topics) < count and attempts < max_attempts:
             try:
                 topic = self.select_topic()
-                
+
                 # Ensure uniqueness
                 if topic not in topics:
                     topics.append(topic)
-                
+
                 attempts += 1
-                
+
                 # Small delay between requests to avoid rate limits
                 if len(topics) < count:
                     time.sleep(0.5)
-                    
+
             except Exception as e:
                 self.logger.error(f"Error generating topic: {e}")
                 attempts += 1
-        
+
         if len(topics) < count:
             self.logger.warning(f"Only generated {len(topics)} of {count} requested topics")
-        
+
         return topics
 
 
 def select_kids_topic(api_key: str, model: str = "gpt-4o-mini") -> str:
     """
     Simple function to select a kids-friendly topic.
-    
+
     Args:
         api_key: OpenAI API key
         model: OpenAI model to use (default: gpt-4o-mini)
-        
+
     Returns:
         str: A kids-friendly video topic
-        
+
     Example:
         >>> topic = select_kids_topic("sk-...")
         >>> print(topic)
@@ -469,29 +469,29 @@ if __name__ == "__main__":
     """
     import os
     import sys
-    
+
     # Set up basic logging
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s'
     )
-    
+
     # Get API key from environment
     api_key = os.getenv("OPENAI_API_KEY")
-    
+
     if not api_key:
         print("Error: OPENAI_API_KEY environment variable not set")
         print("Usage: set OPENAI_API_KEY=your-key-here")
         sys.exit(1)
-    
+
     print("=" * 80)
     print("Kids-Friendly Topic Selector Demo")
     print("=" * 80)
     print()
-    
+
     # Create selector
     selector = KidsTopicSelector(api_key=api_key)
-    
+
     # Generate a single topic
     print("Generating a single topic...")
     try:
@@ -500,11 +500,11 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"✗ Error: {e}")
         sys.exit(1)
-    
+
     print()
     print("-" * 80)
     print()
-    
+
     # Generate multiple topics
     print("Generating 5 unique topics...")
     try:
@@ -514,7 +514,7 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"✗ Error: {e}")
         sys.exit(1)
-    
+
     print()
     print("=" * 80)
     print("Demo complete!")

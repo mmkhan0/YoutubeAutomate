@@ -324,40 +324,40 @@ PREFERRED_RUN_TIME = "02:00"
 def validate_config():
     """
     Validate configuration settings and check for common issues.
-    
+
     Raises:
         ValueError: If critical configuration is missing or invalid
         FileNotFoundError: If required files/directories don't exist
     """
     errors = []
-    
+
     # Check API keys
     if OPENAI_API_KEY == "YOUR_OPENAI_API_KEY_HERE" or not OPENAI_API_KEY:
         errors.append("OpenAI API key not configured. Set OPENAI_API_KEY environment variable.")
-    
+
     # Check FFmpeg
     if not Path(FFMPEG_PATH).exists():
         errors.append(f"FFmpeg not found at: {FFMPEG_PATH}")
-    
+
     # Check YouTube credentials file
     if not Path(YOUTUBE_CLIENT_SECRETS).exists():
         errors.append(f"YouTube client secrets not found at: {YOUTUBE_CLIENT_SECRETS}")
-    
+
     # Check video duration settings
     if VIDEO_MIN_DURATION >= VIDEO_MAX_DURATION:
         errors.append("VIDEO_MIN_DURATION must be less than VIDEO_MAX_DURATION")
-    
+
     if VIDEO_TARGET_DURATION < VIDEO_MIN_DURATION or VIDEO_TARGET_DURATION > VIDEO_MAX_DURATION:
         errors.append("VIDEO_TARGET_DURATION must be between VIDEO_MIN_DURATION and VIDEO_MAX_DURATION")
-    
+
     # Ensure directories exist
-    for directory in [ASSETS_DIR, OUTPUT_DIR, LOGS_DIR, IMAGES_DIR, MUSIC_DIR, 
+    for directory in [ASSETS_DIR, OUTPUT_DIR, LOGS_DIR, IMAGES_DIR, MUSIC_DIR,
                       VIDEOS_DIR, THUMBNAILS_DIR, PROMPTS_DIR]:
         directory.mkdir(parents=True, exist_ok=True)
-    
+
     if errors:
         raise ValueError("Configuration validation failed:\n" + "\n".join(f"  - {e}" for e in errors))
-    
+
     return True
 
 
@@ -368,7 +368,7 @@ def validate_config():
 def get_video_resolution_tuple():
     """
     Get video resolution as tuple of integers (width, height).
-    
+
     Returns:
         tuple: (width, height)
     """
@@ -379,7 +379,7 @@ def get_video_resolution_tuple():
 def get_ffmpeg_command_base():
     """
     Get base FFmpeg command with common options.
-    
+
     Returns:
         list: Base FFmpeg command arguments
     """

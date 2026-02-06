@@ -19,7 +19,7 @@ from datetime import datetime
 class EarlyLearningTopicSelector:
     """
     Selects ONLY early childhood learning topics for ages 2-6.
-    
+
     ALLOWED CATEGORIES (controlled list):
     1. English Alphabet (A-Z)
     2. Hindi Alphabet (अ-ज्ञ)
@@ -37,17 +37,17 @@ class EarlyLearningTopicSelector:
     14. Puzzle Thinking Games
     15. Observation and Attention Games
     """
-    
+
     # Topic history file path
     HISTORY_FILE = "data/topic_history.json"
-    
+
     # Maximum topics to track (prevent repetition)
     MAX_HISTORY = 5
-    
+
     # Age group
     MIN_AGE = 2
     MAX_AGE = 6
-    
+
     # Allowed topic categories with templates
     TOPIC_CATEGORIES = {
         "english_alphabet": {
@@ -88,7 +88,7 @@ class EarlyLearningTopicSelector:
                 "Z": ["Zebra", "Zoo", "Zip"]
             }
         },
-        
+
         "hindi_alphabet": {
             "weight": 8,
             "templates": [
@@ -138,7 +138,7 @@ class EarlyLearningTopicSelector:
                 "ह": ["हाथी", "हल"]
             }
         },
-        
+
         "numbers_counting": {
             "weight": 12,
             "templates": [
@@ -154,7 +154,7 @@ class EarlyLearningTopicSelector:
             ],
             "single_numbers": [1, 2, 3, 4, 5, 10, 15, 20]
         },
-        
+
         "colors_shapes": {
             "weight": 10,
             "templates": [
@@ -168,7 +168,7 @@ class EarlyLearningTopicSelector:
             "colors": ["Red", "Blue", "Yellow", "Green", "Orange", "Purple", "Pink", "Brown", "Black", "White"],
             "shapes": ["Circle", "Square", "Triangle", "Rectangle", "Star", "Heart", "Diamond", "Oval"]
         },
-        
+
         "fruits_vegetables": {
             "weight": 9,
             "templates": [
@@ -181,7 +181,7 @@ class EarlyLearningTopicSelector:
             "fruits": ["Apple", "Banana", "Orange", "Grapes", "Mango", "Strawberry", "Watermelon", "Pineapple"],
             "vegetables": ["Carrot", "Tomato", "Potato", "Broccoli", "Peas", "Corn", "Pumpkin", "Cucumber"]
         },
-        
+
         "animals_sounds": {
             "weight": 12,
             "templates": [
@@ -200,7 +200,7 @@ class EarlyLearningTopicSelector:
                 "Duck": "Quack", "Lion": "Roar", "Elephant": "Trumpet"
             }
         },
-        
+
         "simple_logic": {
             "weight": 11,
             "templates": [
@@ -214,7 +214,7 @@ class EarlyLearningTopicSelector:
                 "Full and Empty - Understanding Quantity for Kids"
             ]
         },
-        
+
         "body_parts": {
             "weight": 8,
             "templates": [
@@ -229,7 +229,7 @@ class EarlyLearningTopicSelector:
                 "Fingers", "Toes", "Hair", "Teeth", "Tongue", "Arms", "Legs"
             ]
         },
-        
+
         "daily_habits": {
             "weight": 9,
             "templates": [
@@ -246,7 +246,7 @@ class EarlyLearningTopicSelector:
                 "Say Please and Thank You", "Share with Friends"
             ]
         },
-        
+
         "emotions": {
             "weight": 8,
             "templates": [
@@ -257,7 +257,7 @@ class EarlyLearningTopicSelector:
             ],
             "emotions": ["Happy", "Sad", "Angry", "Scared", "Excited", "Surprised", "Proud", "Calm"]
         },
-        
+
         "basic_math": {
             "weight": 10,
             "templates": [
@@ -268,7 +268,7 @@ class EarlyLearningTopicSelector:
                 "Simple Subtraction - Taking Away for Toddlers"
             ]
         },
-        
+
         "rhymes_learning": {
             "weight": 9,
             "templates": [
@@ -284,7 +284,7 @@ class EarlyLearningTopicSelector:
                 "Humpty Dumpty", "Jack and Jill", "Five Little Ducks"
             ]
         },
-        
+
         "memory_games": {
             "weight": 7,
             "templates": [
@@ -295,7 +295,7 @@ class EarlyLearningTopicSelector:
                 "Find the Same - Matching Game for Toddlers"
             ]
         },
-        
+
         "puzzle_games": {
             "weight": 7,
             "templates": [
@@ -305,7 +305,7 @@ class EarlyLearningTopicSelector:
                 "Pattern Puzzle - What Comes Next for Kids?"
             ]
         },
-        
+
         "observation_games": {
             "weight": 6,
             "templates": [
@@ -317,11 +317,11 @@ class EarlyLearningTopicSelector:
             ]
         }
     }
-    
+
     def __init__(self, data_dir: str = "data"):
         """
         Initialize the early learning topic selector.
-        
+
         Args:
             data_dir: Directory to store topic history
         """
@@ -329,89 +329,89 @@ class EarlyLearningTopicSelector:
         self.data_dir = Path(data_dir)
         self.data_dir.mkdir(exist_ok=True)
         self.history_file = self.data_dir / "topic_history.json"
-        
+
         # Load topic history
         self.history = self._load_history()
-    
+
     def select_topic(self, language: str = "en") -> Dict[str, str]:
         """
         Select ONE random topic from allowed categories.
         Prevents repetition of last 5 topics.
-        
+
         Args:
             language: Language code (en, hi, both)
-            
+
         Returns:
             Dict with keys: topic, category, age_group, language
         """
         self.logger.info(f"🎲 Selecting early learning topic for ages {self.MIN_AGE}-{self.MAX_AGE}")
-        
+
         # Filter categories by language
         available_categories = self._filter_by_language(language)
-        
+
         # Build weighted list (exclude recently used categories)
         weighted_categories = self._build_weighted_list(available_categories)
-        
+
         # Randomly select category
         category_key = random.choices(
             list(weighted_categories.keys()),
             weights=[weighted_categories[k] for k in weighted_categories.keys()],
             k=1
         )[0]
-        
+
         # Generate topic from category
         topic_data = self._generate_topic_from_category(category_key)
-        
+
         # Add to history
         self._add_to_history(topic_data)
-        
+
         self.logger.info(f"✓ Selected: {topic_data['topic']}")
         self.logger.info(f"   Category: {topic_data['category']}")
         self.logger.info(f"   Age: {topic_data['age_group']}")
-        
+
         return topic_data
-    
+
     def _filter_by_language(self, language: str) -> Dict:
         """Filter categories by language preference."""
         if language == "hi":
             # Hindi: Hindi alphabet, numbers, colors, fruits, animals, logic
-            return {k: v for k, v in self.TOPIC_CATEGORIES.items() 
-                   if k in ["hindi_alphabet", "numbers_counting", "colors_shapes", 
+            return {k: v for k, v in self.TOPIC_CATEGORIES.items()
+                   if k in ["hindi_alphabet", "numbers_counting", "colors_shapes",
                            "fruits_vegetables", "animals_sounds", "simple_logic",
                            "daily_habits", "emotions", "basic_math"]}
         elif language == "en":
             # English: All except Hindi alphabet
-            return {k: v for k, v in self.TOPIC_CATEGORIES.items() 
+            return {k: v for k, v in self.TOPIC_CATEGORIES.items()
                    if k != "hindi_alphabet"}
         else:  # both
             return self.TOPIC_CATEGORIES.copy()
-    
+
     def _build_weighted_list(self, categories: Dict) -> Dict:
         """Build weighted category list, reducing weight for recent topics."""
         weighted = {}
-        
+
         for cat_key, cat_data in categories.items():
             base_weight = cat_data["weight"]
-            
+
             # Check if recently used (last 5)
-            recent_count = sum(1 for h in self.history[-self.MAX_HISTORY:] 
+            recent_count = sum(1 for h in self.history[-self.MAX_HISTORY:]
                              if h.get("category_key") == cat_key)
-            
+
             # Reduce weight if recently used
             if recent_count > 0:
                 weight = max(1, base_weight - (recent_count * 3))
             else:
                 weight = base_weight
-            
+
             weighted[cat_key] = weight
-        
+
         return weighted
-    
+
     def _generate_topic_from_category(self, category_key: str) -> Dict[str, str]:
         """Generate specific topic from category."""
         category = self.TOPIC_CATEGORIES[category_key]
         template = random.choice(category["templates"])
-        
+
         # Fill template based on category
         if category_key == "english_alphabet":
             letter = random.choice(list(category["data"].keys()))
@@ -421,12 +421,12 @@ class EarlyLearningTopicSelector:
                 letter_lower=letter.lower(),
                 word=word
             )
-        
+
         elif category_key == "hindi_alphabet":
             letter = random.choice(list(category["data"].keys()))
             word = random.choice(category["data"][letter])
             topic = template.format(letter=letter, word=word)
-        
+
         elif category_key == "numbers_counting":
             if "{number}" in template:
                 number = random.choice(category["single_numbers"])
@@ -434,7 +434,7 @@ class EarlyLearningTopicSelector:
             else:
                 start, end = random.choice(category["ranges"])
                 topic = template.format(start=start, end=end)
-        
+
         elif category_key == "colors_shapes":
             if "{color}" in template and "{shape}" in template:
                 color = random.choice(category["colors"])
@@ -448,45 +448,45 @@ class EarlyLearningTopicSelector:
                 topic = template.format(shape=shape)
             else:
                 topic = template
-        
+
         elif category_key == "fruits_vegetables":
             if "Fruit" in template or "fruit" in template:
                 item = random.choice(category["fruits"])
             else:
                 item = random.choice(category["vegetables"])
             topic = template.format(item=item)
-        
+
         elif category_key == "animals_sounds":
             # Choose from all animal types
-            all_animals = (category["farm_animals"] + 
-                          category["wild_animals"] + 
+            all_animals = (category["farm_animals"] +
+                          category["wild_animals"] +
                           category["pets"])
             animal = random.choice(all_animals)
             topic = template.format(animal=animal)
-        
+
         elif category_key == "body_parts":
             if "{part}" in template:
                 part = random.choice(category["parts"])
                 topic = template.format(part=part)
             else:
                 topic = template
-        
+
         elif category_key == "daily_habits":
             habit = random.choice(category["habits"])
             topic = template.format(habit=habit)
-        
+
         elif category_key == "emotions":
             emotion = random.choice(category["emotions"])
             topic = template.format(emotion=emotion)
-        
+
         elif category_key == "rhymes_learning":
             rhyme = random.choice(category["rhymes"])
             topic = template.format(rhyme=rhyme)
-        
+
         else:
             # Categories without variables (simple_logic, basic_math, etc.)
             topic = template
-        
+
         return {
             "topic": topic,
             "category": category_key.replace("_", " ").title(),
@@ -495,19 +495,19 @@ class EarlyLearningTopicSelector:
             "language": "Hindi" if category_key == "hindi_alphabet" else "English",
             "timestamp": datetime.now().isoformat()
         }
-    
+
     def _load_history(self) -> List[Dict]:
         """Load topic history from file."""
         if not self.history_file.exists():
             return []
-        
+
         try:
             with open(self.history_file, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except Exception as e:
             self.logger.warning(f"Could not load history: {e}")
             return []
-    
+
     def _save_history(self):
         """Save topic history to file."""
         try:
@@ -515,21 +515,21 @@ class EarlyLearningTopicSelector:
                 json.dump(self.history, f, indent=2, ensure_ascii=False)
         except Exception as e:
             self.logger.error(f"Could not save history: {e}")
-    
+
     def _add_to_history(self, topic_data: Dict):
         """Add topic to history and trim to max size."""
         self.history.append(topic_data)
-        
+
         # Keep only last 50 entries
         if len(self.history) > 50:
             self.history = self.history[-50:]
-        
+
         self._save_history()
-    
+
     def get_recent_topics(self, count: int = 10) -> List[str]:
         """Get list of recent topics."""
         return [h["topic"] for h in self.history[-count:]]
-    
+
     def is_coppa_compliant(self) -> bool:
         """Confirm all topics are COPPA compliant."""
         return True  # All topics are designed for ages 2-6

@@ -21,7 +21,7 @@ except ImportError:
 
 class PlaylistManager:
     """Manage YouTube playlists for organized content"""
-    
+
     # Playlist definitions for each category
     PLAYLIST_DEFINITIONS = {
         'english_alphabet': {
@@ -100,7 +100,7 @@ class PlaylistManager:
             'tags': ['observation', 'attention', 'games', 'kids', 'toddlers', 'visual']
         }
     }
-    
+
     # Age-based playlist collections
     AGE_PLAYLISTS = {
         '2-3': {
@@ -119,7 +119,7 @@ class PlaylistManager:
             'categories': ['basic_math', 'puzzle_games', 'memory_games', 'observation_games']
         }
     }
-    
+
     def __init__(
         self,
         credentials_path: str = "config/youtube_token.pickle",
@@ -127,7 +127,7 @@ class PlaylistManager:
     ):
         """
         Initialize playlist manager
-        
+
         Args:
             credentials_path: Path to YouTube OAuth credentials
             playlist_cache_path: Path to cache playlist IDs
@@ -137,7 +137,7 @@ class PlaylistManager:
         self.logger = logging.getLogger(__name__)
         self.youtube = None
         self.playlists_cache = self._load_playlist_cache()
-        
+
     def _load_playlist_cache(self) -> dict:
         """Load cached playlist IDs"""
         if self.playlist_cache_path.exists():
@@ -147,7 +147,7 @@ class PlaylistManager:
             except Exception as e:
                 self.logger.warning(f"Failed to load playlist cache: {e}")
         return {}
-    
+
     def _save_playlist_cache(self):
         """Save playlist IDs to cache"""
         try:
@@ -156,31 +156,31 @@ class PlaylistManager:
                 json.dump(self.playlists_cache, f, indent=2)
         except Exception as e:
             self.logger.error(f"Failed to save playlist cache: {e}")
-    
+
     def authenticate(self):
         """Authenticate with YouTube API"""
         try:
             if build is None:
                 self.logger.error("google-api-python-client not installed")
                 return False
-            
+
             # Load credentials (should be already authenticated via youtube_uploader)
             if not self.credentials_path.exists():
                 self.logger.error(f"Credentials not found: {self.credentials_path}")
                 return False
-            
+
             import pickle
             with open(self.credentials_path, 'rb') as f:
                 creds = pickle.load(f)
-            
+
             self.youtube = build('youtube', 'v3', credentials=creds)
             self.logger.info("✅ Authenticated with YouTube API")
             return True
-            
+
         except Exception as e:
             self.logger.error(f"❌ Failed to authenticate: {e}")
             return False
-    
+
     def get_or_create_playlist(
         self,
         category: str,
@@ -188,30 +188,30 @@ class PlaylistManager:
     ) -> Optional[str]:
         """
         Get existing playlist ID or create new playlist for category
-        
+
         Args:
             category: Video category
             privacy_status: Playlist privacy (public, unlisted, private)
-            
+
         Returns:
             Playlist ID or None if failed
         """
         if not self.youtube:
             if not self.authenticate():
                 return None
-        
+
         # Check cache first
         if category in self.playlists_cache:
             playlist_id = self.playlists_cache[category]
             if self._playlist_exists(playlist_id):
                 return playlist_id
-        
+
         # Get playlist definition
         playlist_def = self.PLAYLIST_DEFINITIONS.get(category)
         if not playlist_def:
             self.logger.warning(f"No playlist definition for category: {category}")
             return None
-        
+
         try:
             # Create playlist
             request = self.youtube.playlists().insert(
@@ -227,21 +227,21 @@ class PlaylistManager:
                     }
                 }
             )
-            
+
             response = request.execute()
             playlist_id = response['id']
-            
+
             # Cache the playlist ID
             self.playlists_cache[category] = playlist_id
             self._save_playlist_cache()
-            
+
             self.logger.info(f"✅ Created playlist: {playlist_def['title']} ({playlist_id})")
             return playlist_id
-            
+
         except Exception as e:
             self.logger.error(f"❌ Failed to create playlist: {e}")
             return None
-    
+
     def add_video_to_playlist(
         self,
         video_id: str,
@@ -249,18 +249,18 @@ class PlaylistManager:
     ) -> bool:
         """
         Add video to its category playlist
-        
+
         Args:
             video_id: YouTube video ID
             category: Video category
-            
+
         Returns:
             True if successful
         """
         playlist_id = self.get_or_create_playlist(category)
         if not playlist_id:
             return False
-        
+
         try:
             request = self.youtube.playlistItems().insert(
                 part="snippet",
@@ -274,15 +274,15 @@ class PlaylistManager:
                     }
                 }
             )
-            
+
             request.execute()
             self.logger.info(f"✅ Added video to playlist: {video_id} → {playlist_id}")
             return True
-            
+
         except Exception as e:
             self.logger.error(f"❌ Failed to add video to playlist: {e}")
             return False
-    
+
     def organize_video(
         self,
         video_id: str,
@@ -291,21 +291,21 @@ class PlaylistManager:
     ) -> bool:
         """
         Add video to category playlist and age-specific playlist
-        
+
         Args:
             video_id: YouTube video ID
             category: Video category
             age_group: Age group (e.g., "2-3", "4-5", "5-6")
-            
+
         Returns:
             True if successful
         """
         success = True
-        
+
         # Add to category playlist
         if not self.add_video_to_playlist(video_id, category):
             success = False
-        
+
         # Add to age-specific playlist if applicable
         if age_group and age_group in self.AGE_PLAYLISTS:
             age_playlist_id = self._get_or_create_age_playlist(age_group)
@@ -328,22 +328,22 @@ class PlaylistManager:
                 except Exception as e:
                     self.logger.error(f"Failed to add to age playlist: {e}")
                     success = False
-        
+
         return success
-    
+
     def _get_or_create_age_playlist(self, age_group: str) -> Optional[str]:
         """Get or create age-specific playlist"""
         cache_key = f"age_{age_group}"
-        
+
         if cache_key in self.playlists_cache:
             playlist_id = self.playlists_cache[cache_key]
             if self._playlist_exists(playlist_id):
                 return playlist_id
-        
+
         age_def = self.AGE_PLAYLISTS.get(age_group)
         if not age_def:
             return None
-        
+
         try:
             request = self.youtube.playlists().insert(
                 part="snippet,status",
@@ -357,19 +357,19 @@ class PlaylistManager:
                     }
                 }
             )
-            
+
             response = request.execute()
             playlist_id = response['id']
-            
+
             self.playlists_cache[cache_key] = playlist_id
             self._save_playlist_cache()
-            
+
             return playlist_id
-            
+
         except Exception as e:
             self.logger.error(f"Failed to create age playlist: {e}")
             return None
-    
+
     def _playlist_exists(self, playlist_id: str) -> bool:
         """Check if playlist still exists"""
         try:
@@ -381,7 +381,7 @@ class PlaylistManager:
             return len(response.get('items', [])) > 0
         except:
             return False
-    
+
     def list_all_playlists(self) -> dict:
         """List all managed playlists"""
         return self.playlists_cache.copy()
@@ -390,9 +390,9 @@ class PlaylistManager:
 def main():
     """Test playlist manager"""
     logging.basicConfig(level=logging.INFO)
-    
+
     manager = PlaylistManager()
-    
+
     if manager.authenticate():
         # Create all category playlists
         print("\n📚 Creating playlists for all categories...\n")
@@ -400,7 +400,7 @@ def main():
             playlist_id = manager.get_or_create_playlist(category)
             if playlist_id:
                 print(f"✅ {category}: {playlist_id}")
-        
+
         print("\n📋 All playlists:")
         for key, playlist_id in manager.list_all_playlists().items():
             print(f"  {key}: {playlist_id}")

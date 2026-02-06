@@ -30,7 +30,7 @@ class SEOScore:
     keyword_density_score: int
     recommendations: List[str]
     strengths: List[str]
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
@@ -59,10 +59,10 @@ class KeywordResearch:
 class YouTubeSEOOptimizer:
     """
     Advanced YouTube SEO optimizer with automatic enhancements.
-    
+
     Analyzes and improves metadata for maximum discoverability.
     """
-    
+
     def __init__(
         self,
         api_key: str,
@@ -71,7 +71,7 @@ class YouTubeSEOOptimizer:
     ):
         """
         Initialize SEO Optimizer.
-        
+
         Args:
             api_key: OpenAI API key
             model: AI model to use
@@ -81,7 +81,7 @@ class YouTubeSEOOptimizer:
         self.model = model
         self.temperature = temperature
         self.logger = logging.getLogger(__name__)
-    
+
     def research_keywords(
         self,
         topic: str,
@@ -90,17 +90,17 @@ class YouTubeSEOOptimizer:
     ) -> KeywordResearch:
         """
         Research optimal keywords for the topic.
-        
+
         Args:
             topic: Video topic
             category: Content category (kids/tech/science)
             language: Target language
-            
+
         Returns:
             KeywordResearch: Comprehensive keyword data
         """
         self.logger.info(f"🔍 Researching keywords for: {topic}")
-        
+
         prompt = f"""You are a YouTube SEO expert. Research and provide comprehensive keyword data for this video:
 
 TOPIC: {topic}
@@ -113,24 +113,24 @@ Provide detailed keyword research:
 1. PRIMARY KEYWORDS (3-5 main keywords):
    - Core topic keywords that define the video
    - High search volume, highly relevant
-   
+
 2. SECONDARY KEYWORDS (5-8 related keywords):
    - Supporting keywords that expand reach
    - Medium search volume, relevant
-   
+
 3. LONG-TAIL KEYWORDS (5-10 specific phrases):
    - Exact phrases parents/kids would search
    - Examples: "why do leaves change color for kids", "butterfly life cycle explained simple"
    - Lower competition, high conversion
-   
+
 4. TRENDING KEYWORDS (3-5 current trends):
    - Currently popular keywords in this category
    - Seasonal or viral trends related to topic
-   
+
 5. COMPETITOR KEYWORDS (5-8 from top videos):
    - Keywords used by successful videos in this niche
    - Proven to drive views and engagement
-   
+
 6. SEARCH VOLUME ESTIMATES:
    - Classify each primary keyword as: High, Medium, or Low search volume
 
@@ -147,7 +147,7 @@ Return JSON only:
     "keyword3": "Low"
   }}
 }}"""
-        
+
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
@@ -158,19 +158,19 @@ Return JSON only:
                 temperature=self.temperature,
                 max_tokens=1000
             )
-            
+
             content = response.choices[0].message.content.strip()
-            
+
             # Parse JSON
             if content.startswith('```'):
                 content = content.split('```')[1]
                 if content.startswith('json'):
                     content = content[4:]
                 content = content.strip()
-            
+
             import json
             data = json.loads(content)
-            
+
             result = KeywordResearch(
                 primary_keywords=data.get('primary_keywords', []),
                 secondary_keywords=data.get('secondary_keywords', []),
@@ -179,13 +179,13 @@ Return JSON only:
                 competitor_keywords=data.get('competitor_keywords', []),
                 search_volume_estimate=data.get('search_volume_estimate', {})
             )
-            
+
             self.logger.info(f"✓ Found {len(result.primary_keywords)} primary keywords")
             self.logger.info(f"✓ Found {len(result.long_tail_keywords)} long-tail keywords")
             self.logger.info(f"✓ Found {len(result.trending_keywords)} trending keywords")
-            
+
             return result
-            
+
         except Exception as e:
             self.logger.error(f"Keyword research failed: {e}")
             # Return basic fallback
@@ -197,7 +197,7 @@ Return JSON only:
                 competitor_keywords=["kids learning"],
                 search_volume_estimate={topic: "Medium"}
             )
-    
+
     def optimize_title(
         self,
         topic: str,
@@ -206,24 +206,24 @@ Return JSON only:
     ) -> Tuple[str, List[str], Dict[str, int]]:
         """
         Generate and optimize title with A/B testing.
-        
+
         Args:
             topic: Video topic
             keywords: Keyword research data
             generate_variants: Number of variants to generate
-            
+
         Returns:
             Tuple of (best_title, all_variants, scores)
         """
         self.logger.info(f"📝 Generating {generate_variants} optimized title variants")
-        
+
         # Build keyword context
         keyword_context = f"""
 PRIMARY KEYWORDS: {', '.join(keywords.primary_keywords[:3])}
 LONG-TAIL KEYWORDS: {', '.join(keywords.long_tail_keywords[:3])}
 TRENDING: {', '.join(keywords.trending_keywords[:2])}
 """
-        
+
         prompt = f"""Generate {generate_variants} optimized YouTube title variants for kids educational content.
 
 TOPIC: {topic}
@@ -256,7 +256,7 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
     {{"title": "Title 5", "seo_score": 82, "strategy": "curiosity-driven"}}
   ]
 }}"""
-        
+
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
@@ -267,31 +267,31 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
                 temperature=0.8,  # Higher creativity for variants
                 max_tokens=800
             )
-            
+
             content = response.choices[0].message.content.strip()
-            
+
             # Parse JSON
             if content.startswith('```'):
                 content = content.split('```')[1]
                 if content.startswith('json'):
                     content = content[4:]
                 content = content.strip()
-            
+
             import json
             data = json.loads(content)
-            
+
             variants_data = data.get('variants', [])
-            
+
             # Extract titles and scores
             all_variants = []
             scores = {}
-            
+
             for v in variants_data:
                 title = v.get('title', '')
                 if title:
                     all_variants.append(title)
                     scores[title] = v.get('seo_score', 50)
-            
+
             # Pick best variant (highest score)
             if all_variants:
                 best_title = max(all_variants, key=lambda t: scores.get(t, 0))
@@ -300,14 +300,14 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
                 best_title = topic[:70]
                 all_variants = [best_title]
                 scores = {best_title: 50}
-            
+
             return best_title, all_variants, scores
-            
+
         except Exception as e:
             self.logger.error(f"Title optimization failed: {e}")
             fallback = topic[:70]
             return fallback, [fallback], {fallback: 50}
-    
+
     def score_seo_quality(
         self,
         title: str,
@@ -318,26 +318,26 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
     ) -> SEOScore:
         """
         Analyze and score SEO quality with recommendations.
-        
+
         Args:
             title: Video title
             description: Video description
             tags: Video tags
             hashtags: Video hashtags
             keywords: Keyword research data
-            
+
         Returns:
             SEOScore: Comprehensive SEO analysis
         """
         self.logger.info("📊 Analyzing SEO quality...")
-        
+
         strengths = []
         recommendations = []
-        
+
         # Score title (0-100)
         title_score = 0
         title_lower = title.lower()
-        
+
         # Length check (40-70 chars optimal)
         if 40 <= len(title) <= 70:
             title_score += 30
@@ -348,7 +348,7 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
         else:
             title_score += 20
             recommendations.append(f"Title is long ({len(title)} chars). Shorten to 40-70 chars")
-        
+
         # Keyword presence
         keyword_in_title = any(kw.lower() in title_lower for kw in keywords.primary_keywords[:3])
         if keyword_in_title:
@@ -356,19 +356,19 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
             strengths.append("Primary keyword found in title")
         else:
             recommendations.append("Include primary keyword in title for better ranking")
-        
+
         # Keyword position (early is better)
         if keywords.primary_keywords and keywords.primary_keywords[0].lower() in title_lower[:40]:
             title_score += 30
             strengths.append("Keyword appears early in title (first 40 chars)")
-        
+
         # Cap at 100
         title_score = min(title_score, 100)
-        
+
         # Score description (0-100)
         description_score = 0
         description_lower = description.lower()
-        
+
         # Length check (200-400 optimal for kids content)
         if 200 <= len(description) <= 400:
             description_score += 25
@@ -378,7 +378,7 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
             recommendations.append(f"Description is short ({len(description)} chars). Expand to 200-400 chars")
         else:
             description_score += 20
-        
+
         # Keyword mentions (3-5 times optimal)
         keyword_count = sum(kw.lower() in description_lower for kw in keywords.primary_keywords)
         if 2 <= keyword_count <= 5:
@@ -392,7 +392,7 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
             recommendations.append(f"Keyword density too high ({keyword_count} times). Reduce to 3-5 mentions")
         else:
             description_score += 25
-        
+
         # Paragraph structure
         paragraphs = [p.strip() for p in description.split('\n\n') if p.strip()]
         if len(paragraphs) >= 2:
@@ -400,18 +400,18 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
             strengths.append("Good paragraph structure (2+ paragraphs)")
         else:
             recommendations.append("Split description into 2 paragraphs for readability")
-        
+
         # Long-tail keywords
         longtail_in_desc = any(kw.lower() in description_lower for kw in keywords.long_tail_keywords[:3])
         if longtail_in_desc:
             description_score += 20
             strengths.append("Long-tail keywords included in description")
-        
+
         description_score = min(description_score, 100)
-        
+
         # Score tags (0-100)
         tags_score = 0
-        
+
         # Tag count (12-20 optimal)
         if 12 <= len(tags) <= 20:
             tags_score += 30
@@ -421,32 +421,32 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
             recommendations.append(f"Add more tags (current: {len(tags)}, optimal: 12-20)")
         else:
             tags_score += 25
-        
+
         # Tag diversity (mix of keywords)
         tags_lower = [t.lower() for t in tags]
         primary_in_tags = sum(1 for kw in keywords.primary_keywords if kw.lower() in ' '.join(tags_lower))
         secondary_in_tags = sum(1 for kw in keywords.secondary_keywords[:5] if kw.lower() in ' '.join(tags_lower))
-        
+
         if primary_in_tags >= 2:
             tags_score += 35
             strengths.append("Primary keywords well-represented in tags")
         else:
             recommendations.append("Include more primary keywords as tags")
-        
+
         if secondary_in_tags >= 2:
             tags_score += 20
-        
+
         # Long-tail tags
         longtail_in_tags = any(kw.lower() in ' '.join(tags_lower) for kw in keywords.long_tail_keywords[:3])
         if longtail_in_tags:
             tags_score += 15
             strengths.append("Long-tail keywords used in tags")
-        
+
         tags_score = min(tags_score, 100)
-        
+
         # Score hashtags (0-100)
         hashtags_score = 0
-        
+
         # Hashtag count (8-15 optimal)
         if 8 <= len(hashtags) <= 15:
             hashtags_score += 40
@@ -456,16 +456,16 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
             recommendations.append(f"Add more hashtags (current: {len(hashtags)}, optimal: 8-15)")
         else:
             hashtags_score += 30
-        
+
         # Trending hashtags
-        trending_in_hashtags = any(kw.replace(' ', '') in ''.join(hashtags).lower() 
+        trending_in_hashtags = any(kw.replace(' ', '') in ''.join(hashtags).lower()
                                    for kw in keywords.trending_keywords)
         if trending_in_hashtags:
             hashtags_score += 30
             strengths.append("Trending keywords included as hashtags")
         else:
             recommendations.append("Add current trending keywords as hashtags")
-        
+
         # Category hashtags
         category_hashtags = ['KidsEducation', 'LearningForKids', 'EducationalVideos']
         has_category = any(h in hashtags for h in category_hashtags)
@@ -473,14 +473,14 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
             hashtags_score += 30
         else:
             recommendations.append("Add category-specific hashtags (e.g., KidsEducation)")
-        
+
         hashtags_score = min(hashtags_score, 100)
-        
+
         # Keyword density score (0-100)
         total_text = f"{title} {description} {' '.join(tags)}".lower()
-        total_keywords = sum(kw.lower() in total_text for kw in 
+        total_keywords = sum(kw.lower() in total_text for kw in
                            keywords.primary_keywords + keywords.secondary_keywords[:5])
-        
+
         if total_keywords >= 8:
             keyword_density_score = 100
             strengths.append("Excellent keyword coverage across all metadata")
@@ -493,7 +493,7 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
         else:
             keyword_density_score = 25
             recommendations.append("Low keyword density. Add more relevant keywords throughout metadata")
-        
+
         # Overall score (weighted average)
         overall_score = int(
             title_score * 0.30 +           # 30% weight
@@ -502,7 +502,7 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
             hashtags_score * 0.15 +         # 15% weight
             keyword_density_score * 0.10    # 10% weight
         )
-        
+
         return SEOScore(
             overall_score=overall_score,
             title_score=title_score,
@@ -513,7 +513,7 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
             recommendations=recommendations,
             strengths=strengths
         )
-    
+
     def enhance_metadata_with_keywords(
         self,
         metadata: Dict[str, Any],
@@ -521,53 +521,53 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
     ) -> Dict[str, Any]:
         """
         Enhance existing metadata with researched keywords.
-        
+
         Args:
             metadata: Current metadata (title, description, tags, hashtags)
             keywords: Keyword research data
-            
+
         Returns:
             Dict: Enhanced metadata
         """
         self.logger.info("🚀 Enhancing metadata with researched keywords...")
-        
+
         enhanced = metadata.copy()
-        
+
         # Enhance tags with long-tail keywords
         current_tags = set(t.lower() for t in enhanced.get('tags', []))
-        
+
         # Add long-tail keywords as tags (if not too long)
         for longtail in keywords.long_tail_keywords:
             if len(longtail) <= 30 and longtail.lower() not in ' '.join(current_tags):
                 enhanced['tags'].append(longtail)
-        
+
         # Add trending keywords as tags
         for trending in keywords.trending_keywords:
             if len(trending) <= 30 and trending.lower() not in ' '.join(current_tags):
                 enhanced['tags'].append(trending)
-        
+
         # Limit to 20 tags
         enhanced['tags'] = enhanced['tags'][:20]
-        
+
         # Enhance hashtags with trending keywords
         current_hashtags = set(h.lower() for h in enhanced.get('hashtags', []))
-        
+
         for trending in keywords.trending_keywords:
             hashtag = trending.replace(' ', '').replace('-', '')
             if len(hashtag) <= 30 and hashtag.lower() not in current_hashtags:
                 enhanced['hashtags'].append(hashtag)
-        
+
         # Add competitor keywords as hashtags
         for comp in keywords.competitor_keywords[:3]:
             hashtag = comp.replace(' ', '').replace('-', '')
             if len(hashtag) <= 30 and hashtag.lower() not in current_hashtags:
                 enhanced['hashtags'].append(hashtag)
-        
+
         # Limit to 15 hashtags
         enhanced['hashtags'] = enhanced['hashtags'][:15]
-        
+
         self.logger.info(f"✓ Enhanced: {len(enhanced['tags'])} tags, {len(enhanced['hashtags'])} hashtags")
-        
+
         return enhanced
 
 
@@ -584,31 +584,31 @@ def optimize_youtube_seo(
 ) -> Tuple[Dict[str, Any], SEOScore, KeywordResearch]:
     """
     Comprehensive SEO optimization for YouTube metadata.
-    
+
     Args:
         topic: Video topic
         metadata: Current metadata dict
         category: Content category
-        language: Target language  
+        language: Target language
         api_key: OpenAI API key
-        
+
     Returns:
         Tuple of (optimized_metadata, seo_score, keyword_research)
     """
     optimizer = YouTubeSEOOptimizer(api_key=api_key)
-    
+
     # Research keywords
     keywords = optimizer.research_keywords(topic, category, language)
-    
+
     # Optimize title
     best_title, variants, scores = optimizer.optimize_title(topic, keywords)
     metadata['title'] = best_title
     metadata['title_variants'] = variants
     metadata['title_scores'] = scores
-    
+
     # Enhance with keywords
     enhanced_metadata = optimizer.enhance_metadata_with_keywords(metadata, keywords)
-    
+
     # Score SEO quality
     seo_score = optimizer.score_seo_quality(
         title=enhanced_metadata['title'],
@@ -617,21 +617,21 @@ def optimize_youtube_seo(
         hashtags=enhanced_metadata['hashtags'],
         keywords=keywords
     )
-    
+
     return enhanced_metadata, seo_score, keywords
 
 
 if __name__ == "__main__":
     """Test SEO optimizer"""
     import os
-    
+
     logging.basicConfig(level=logging.INFO)
-    
+
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         print("Set OPENAI_API_KEY environment variable")
         exit(1)
-    
+
     # Test with example
     test_topic = "Why Do Leaves Change Colors in Fall"
     test_metadata = {
@@ -640,29 +640,29 @@ if __name__ == "__main__":
         'tags': ["leaves", "colors", "fall", "autumn"],
         'hashtags': ["KidsLearning"]
     }
-    
+
     print("=" * 80)
     print("SEO OPTIMIZER TEST")
     print("=" * 80)
-    
+
     optimized, score, keywords = optimize_youtube_seo(
         topic=test_topic,
         metadata=test_metadata,
         api_key=api_key
     )
-    
+
     print(f"\n📊 SEO SCORE: {score.overall_score}/100")
     print(f"\n✓ STRENGTHS:")
     for s in score.strengths:
         print(f"  • {s}")
-    
+
     print(f"\n💡 RECOMMENDATIONS:")
     for r in score.recommendations:
         print(f"  • {r}")
-    
+
     print(f"\n🎯 PRIMARY KEYWORDS: {', '.join(keywords.primary_keywords)}")
     print(f"📈 TRENDING: {', '.join(keywords.trending_keywords)}")
-    
+
     print(f"\n✨ OPTIMIZED TITLE: {optimized['title']}")
     print(f"🏷️  TAGS ({len(optimized['tags'])}): {', '.join(optimized['tags'][:5])}...")
     print(f"#️⃣  HASHTAGS ({len(optimized['hashtags'])}): {', '.join(['#'+h for h in optimized['hashtags'][:5]])}...")
