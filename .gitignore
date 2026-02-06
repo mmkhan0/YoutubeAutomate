@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Configuration files with sensitive data
+config/config.yaml
+.env
+config/client_secrets.json
+config/oauth_token.json
+config/youtube_token.pickle
+
+# Output files
+output/videos/*.mp4
+output/thumbnails/*.jpg
+output/thumbnails/*.png
+
+# Logs
+logs/*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+temp/
+tmp/
+*.tmp

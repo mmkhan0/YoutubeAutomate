@@ -1,0 +1,17 @@
+# Example Configuration File
+# Copy this to config.yaml and fill in your actual API keys
+
+api_keys:
+  openai_api_key: "sk-..."
+  youtube_client_secrets: "config/client_secrets.json"
+  pexels_api_key: "your_pexels_key"
+  elevenlabs_api_key: "your_elevenlabs_key"
+
+video:
+  target_duration_seconds: 180
+  max_duration_seconds: 900
+  resolution: "1920x1080"
+  fps: 30
+
+paths:
+  ffmpeg_path: "C:\\ffmpeg\\bin\\ffmpeg.exe"

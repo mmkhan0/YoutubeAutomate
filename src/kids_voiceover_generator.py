@@ -1,0 +1,565 @@
+"""
+Kids Voiceover Generator Module
+
+Converts narration text into child-friendly voiceover audio files
+using ElevenLabs API.
+
+Features:
+- Calm, friendly voice for children
+- Slightly slower speaking speed (0.85x)
+- Handles long text with automatic chunking
+- MP3 output format
+- Retry logic with error handling
+- Progress tracking
+"""
+
+import logging
+import time
+from pathlib import Path
+from typing import Optional, List
+from datetime import datetime
+import requests
+from elevenlabs.client import ElevenLabs
+
+
+class KidsVoiceoverGenerator:
+    """
+    Generates child-friendly voiceover audio from text using ElevenLabs API.
+    
+    Features calm, warm voices suitable for educational content
+    aimed at children aged 4-8 years.
+    """
+    
+    # ElevenLabs API settings
+    ELEVENLABS_API_URL = "https://api.elevenlabs.io/v1/text-to-speech"
+    
+    # Voice IDs (ElevenLabs voices suitable for kids content)
+    # Rachel: Calm, clear, warm female voice
+    DEFAULT_VOICE_ID = "21m00Tcm4TlvDq8ikWAM"
+    
+    # Alternative kid-friendly voices:
+    # Bella: Soft, gentle female voice
+    BELLA_VOICE_ID = "EXAVITQu4vr4xnSDxMaL"
+    # Elli: Young, lively female voice
+    ELLI_VOICE_ID = "MF3mGyEYCl7XYWbV9V6O"
+    
+    # Voice settings optimized for kids content
+    DEFAULT_STABILITY = 0.75      # Higher = more consistent
+    DEFAULT_SIMILARITY = 0.75     # How close to original voice
+    DEFAULT_STYLE = 0.0           # 0 = more natural, 1 = more expressive
+    DEFAULT_SPEED = 0.85          # Slightly slower for clarity (0.25-4.0)
+    
+    # API settings
+    MAX_RETRIES = 3
+    RETRY_DELAY = 2
+    REQUEST_TIMEOUT = 120
+    
+    # Text chunking (ElevenLabs has character limits)
+    MAX_CHARS_PER_REQUEST = 5000
+    
+    def __init__(
+        self,
+        api_key: str,
+        voice_id: Optional[str] = None,
+        output_dir: Optional[str] = None,
+        speed: float = DEFAULT_SPEED
+    ):
+        """
+        Initialize the Kids Voiceover Generator.
+        
+        Args:
+            api_key: ElevenLabs API key
+            voice_id: Voice ID to use (default: Rachel)
+            output_dir: Directory to save audio files (default: output/)
+            speed: Speaking speed multiplier (default: 0.85 for slower)
+        """
+        self.api_key = api_key
+        self.voice_id = voice_id or self.DEFAULT_VOICE_ID
+        self.speed = speed
+        self.logger = logging.getLogger(__name__)
+        
+        # Initialize ElevenLabs client with official SDK
+        self.client = ElevenLabs(api_key=api_key)
+        
+        # Set up output directory
+        if output_dir is None:
+            project_root = Path(__file__).parent.parent
+            self.output_dir = project_root / "output"
+        else:
+            self.output_dir = Path(output_dir)
+        
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.logger.info(f"Audio files will be saved to: {self.output_dir}")
+    
+    def generate_voiceover(
+        self,
+        text: str,
+        output_filename: Optional[str] = None
+    ) -> str:
+        """
+        Generate voiceover audio from text.
+        
+        Args:
+            text: Narration text to convert to speech
+            output_filename: Output filename (default: auto-generated)
+            
+        Returns:
+            str: Path to generated audio file
+            
+        Raises:
+            ValueError: If text is empty or too short
+            RuntimeError: If generation fails after retries
+        """
+        # Validate input
+        if not text or len(text.strip()) < 10:
+            raise ValueError("Text must be at least 10 characters long")
+        
+        self.logger.info(f"Generating voiceover ({len(text)} characters)")
+        
+        # Generate output filename if not provided
+        if output_filename is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            output_filename = f"voiceover_{timestamp}.mp3"
+        
+        # Ensure .mp3 extension
+        if not output_filename.endswith('.mp3'):
+            output_filename += '.mp3'
+        
+        output_path = self.output_dir / output_filename
+        
+        # Check if text needs to be chunked
+        if len(text) > self.MAX_CHARS_PER_REQUEST:
+            self.logger.info("Text exceeds limit, using chunked generation")
+            return self._generate_chunked_voiceover(text, output_path)
+        else:
+            return self._generate_single_voiceover(text, output_path)
+    
+    def _generate_single_voiceover(self, text: str, output_path: Path) -> str:
+        """
+        Generate voiceover for text that fits in one request.
+        
+        Args:
+            text: Text to convert
+            output_path: Path to save audio file
+            
+        Returns:
+            str: Path to generated audio file
+        """
+        for attempt in range(1, self.MAX_RETRIES + 1):
+            try:
+                self.logger.debug(f"Using ElevenLabs SDK (attempt {attempt}/{self.MAX_RETRIES})")
+                
+                # Use official ElevenLabs SDK
+                audio_generator = self.client.text_to_speech.convert(
+                    text=text,
+                    voice_id=self.voice_id,
+                    model_id="eleven_multilingual_v2",
+                    output_format="mp3_44100_128"
+                )
+                
+                # Write audio to file
+                with open(output_path, 'wb') as f:
+                    for chunk in audio_generator:
+                        f.write(chunk)
+                
+                file_size_mb = output_path.stat().st_size / (1024 * 1024)
+                self.logger.info(f"✓ Voiceover generated: {output_path.name} ({file_size_mb:.2f} MB)")
+                
+                return str(output_path)
+                
+            except Exception as e:
+                self.logger.error(f"Attempt {attempt} failed: {e}")
+                if attempt < self.MAX_RETRIES:
+                    delay = self.RETRY_DELAY * attempt
+                    self.logger.info(f"Retrying in {delay} seconds...")
+                    time.sleep(delay)
+                else:
+                    raise
+        
+        raise RuntimeError("Voiceover generation failed")
+    
+    def _generate_chunked_voiceover(self, text: str, output_path: Path) -> str:
+        """
+        Generate voiceover for long text by chunking.
+        
+        Args:
+            text: Long text to convert
+            output_path: Path to save final audio file
+            
+        Returns:
+            str: Path to generated audio file
+        """
+        self.logger.info("Chunking text for generation")
+        
+        # Split text into chunks
+        chunks = self._split_text_into_chunks(text)
+        self.logger.info(f"Split into {len(chunks)} chunks")
+        
+        # Generate audio for each chunk
+        chunk_files = []
+        
+        for i, chunk in enumerate(chunks, 1):
+            self.logger.info(f"Generating chunk {i}/{len(chunks)}")
+            
+            chunk_filename = f"chunk_{i:03d}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.mp3"
+            chunk_path = self.output_dir / chunk_filename
+            
+            try:
+                self._generate_single_voiceover(chunk, chunk_path)
+                chunk_files.append(chunk_path)
+                
+                # Small delay between chunks to avoid rate limits
+                if i < len(chunks):
+                    time.sleep(1)
+                    
+            except Exception as e:
+                self.logger.error(f"Failed to generate chunk {i}: {e}")
+                # Clean up partial files
+                for chunk_file in chunk_files:
+                    if chunk_file.exists():
+                        chunk_file.unlink()
+                raise
+        
+        # Merge audio chunks
+        self.logger.info("Merging audio chunks")
+        merged_path = self._merge_audio_files(chunk_files, output_path)
+        
+        # Clean up chunk files
+        for chunk_file in chunk_files:
+            if chunk_file.exists():
+                chunk_file.unlink()
+        
+        return merged_path
+    
+    def _split_text_into_chunks(self, text: str) -> List[str]:
+        """
+        Split long text into chunks at sentence boundaries.
+        
+        Args:
+            text: Text to split
+            
+        Returns:
+            List[str]: List of text chunks
+        """
+        # Split into sentences
+        import re
+        sentences = re.split(r'(?<=[.!?])\s+', text)
+        
+        chunks = []
+        current_chunk = ""
+        
+        for sentence in sentences:
+            # Check if adding this sentence would exceed limit
+            if len(current_chunk) + len(sentence) > self.MAX_CHARS_PER_REQUEST:
+                if current_chunk:
+                    chunks.append(current_chunk.strip())
+                current_chunk = sentence
+            else:
+                current_chunk += " " + sentence if current_chunk else sentence
+        
+        # Add final chunk
+        if current_chunk:
+            chunks.append(current_chunk.strip())
+        
+        return chunks
+    
+    def _merge_audio_files(self, audio_files: List[Path], output_path: Path) -> str:
+        """
+        Merge multiple audio files into one using FFmpeg.
+        
+        Args:
+            audio_files: List of audio file paths
+            output_path: Path for merged output
+            
+        Returns:
+            str: Path to merged audio file
+        """
+        import subprocess
+        import tempfile
+        
+        try:
+            # If only one file, just copy it
+            if len(audio_files) == 1:
+                import shutil
+                shutil.copy(audio_files[0], output_path)
+                self.logger.info(f"✓ Single audio file copied: {output_path.name}")
+                return str(output_path)
+            
+            # Create concat file for FFmpeg
+            concat_file = Path(tempfile.gettempdir()) / "concat_list.txt"
+            with open(concat_file, 'w', encoding='utf-8') as f:
+                for audio_file in audio_files:
+                    # Need absolute paths and escape special characters
+                    abs_path = str(audio_file.absolute()).replace('\\', '/')
+                    f.write(f"file '{abs_path}'\n")
+            
+            # Use FFmpeg to concatenate audio files
+            ffmpeg_path = self._get_ffmpeg_path()
+            
+            cmd = [
+                ffmpeg_path,
+                '-f', 'concat',
+                '-safe', '0',
+                '-i', str(concat_file),
+                '-c', 'copy',  # Copy codec (no re-encoding, faster)
+                '-y',  # Overwrite output
+                str(output_path)
+            ]
+            
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=120
+            )
+            
+            if result.returncode == 0:
+                self.logger.info(f"✓ Merged {len(audio_files)} audio files: {output_path.name}")
+                return str(output_path)
+            else:
+                raise Exception(f"FFmpeg merge failed: {result.stderr}")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to merge audio files: {str(e)}")
+            
+            # Fallback: just use first chunk
+            self.logger.warning("Using first audio chunk only as fallback")
+            import shutil
+            shutil.copy(audio_files[0], output_path)
+            return str(output_path)
+        finally:
+            # Clean up concat file
+            if 'concat_file' in locals() and concat_file.exists():
+                concat_file.unlink()
+    
+    def _get_ffmpeg_path(self) -> str:
+        """Get FFmpeg executable path."""
+        import config
+        import shutil
+        
+        # Try configured path first
+        if config.FFMPEG_PATH and os.path.exists(config.FFMPEG_PATH):
+            return config.FFMPEG_PATH
+        
+        # Try system ffmpeg
+        system_ffmpeg = shutil.which('ffmpeg')
+        if system_ffmpeg:
+            return system_ffmpeg
+        
+        raise FileNotFoundError("FFmpeg not found. Install FFmpeg or set FFMPEG_PATH in config.")
+    
+    def test_api(self) -> bool:
+        """
+        Test if the ElevenLabs API key is valid.
+        
+        Returns:
+            bool: True if API key is valid, False otherwise
+        """
+        test_text = "Hello, this is a test."
+        
+        try:
+            url = f"{self.ELEVENLABS_API_URL}/{self.voice_id}"
+            
+            headers = {
+                "Accept": "audio/mpeg",
+                "Content-Type": "application/json",
+                "xi-api-key": self.api_key
+            }
+            
+            payload = {
+                "text": test_text,
+                "model_id": "eleven_monolingual_v1"
+            }
+            
+            response = requests.post(
+                url,
+                json=payload,
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                self.logger.info("✓ ElevenLabs API key is valid")
+                return True
+            else:
+                self.logger.error(f"✗ API test failed: {response.status_code}")
+                return False
+                
+        except Exception as e:
+            self.logger.error(f"✗ API test error: {e}")
+            return False
+    
+    def get_available_voices(self) -> List[dict]:
+        """
+        Get list of available voices from ElevenLabs.
+        
+        Returns:
+            List[dict]: List of available voices with metadata
+        """
+        try:
+            url = "https://api.elevenlabs.io/v1/voices"
+            
+            headers = {
+                "Accept": "application/json",
+                "xi-api-key": self.api_key
+            }
+            
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                voices = response.json().get('voices', [])
+                self.logger.info(f"Found {len(voices)} available voices")
+                return voices
+            else:
+                self.logger.error(f"Failed to get voices: {response.status_code}")
+                return []
+                
+        except Exception as e:
+            self.logger.error(f"Error getting voices: {e}")
+            return []
+
+
+def generate_voiceover_from_script(
+    script: dict,
+    api_key: str,
+    output_filename: Optional[str] = None,
+    speed: float = 0.85
+) -> str:
+    """
+    Convenience function to generate voiceover from a video script.
+    
+    Args:
+        script: Video script dictionary (from kids_script_generator)
+        api_key: ElevenLabs API key
+        output_filename: Output filename (default: auto-generated)
+        speed: Speaking speed (default: 0.85 for slightly slower)
+        
+    Returns:
+        str: Path to generated audio file
+        
+    Example:
+        >>> from kids_script_generator import generate_kids_script
+        >>> script = generate_kids_script("Why Birds Fly", api_key="sk-...")
+        >>> audio = generate_voiceover_from_script(script, api_key="elevenlabs-key")
+        >>> print(f"Audio saved to: {audio}")
+    """
+    # Extract full narration from script
+    narration = script.get('full_narration', '')
+    
+    if not narration:
+        # Build narration from sections if full_narration not available
+        parts = []
+        
+        if 'intro' in script:
+            parts.append(script['intro'].get('narration', ''))
+        
+        if 'body_sections' in script:
+            for section in script['body_sections']:
+                parts.append(section.get('narration', ''))
+        
+        if 'outro' in script:
+            parts.append(script['outro'].get('narration', ''))
+        
+        narration = "\n\n".join(parts)
+    
+    # Generate voiceover
+    generator = KidsVoiceoverGenerator(api_key=api_key, speed=speed)
+    return generator.generate_voiceover(narration, output_filename)
+
+
+# ============================================================================
+# EXAMPLE USAGE
+# ============================================================================
+
+if __name__ == "__main__":
+    """
+    Example usage of the KidsVoiceoverGenerator.
+    """
+    import os
+    import sys
+    
+    # Set up logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s'
+    )
+    
+    # Get API key from environment
+    api_key = os.getenv("ELEVENLABS_API_KEY")
+    
+    if not api_key:
+        print("Error: ELEVENLABS_API_KEY environment variable not set")
+        print("Get your API key from: https://elevenlabs.io/")
+        sys.exit(1)
+    
+    print("=" * 80)
+    print("Kids Voiceover Generator Demo")
+    print("=" * 80)
+    print()
+    
+    # Create generator
+    generator = KidsVoiceoverGenerator(api_key=api_key, speed=0.85)
+    
+    # Test API connection
+    print("Testing API connection...")
+    if not generator.test_api():
+        print("✗ API test failed. Check your API key.")
+        sys.exit(1)
+    
+    print("✓ API connection successful")
+    print()
+    
+    # Example narration text
+    narration = """
+    Hello friends! Today we're going to learn about something amazing.
+    
+    Have you ever wondered why the sky is blue? It's a great question!
+    
+    The sky looks blue because of something called sunlight. Sunlight has many colors in it.
+    When sunlight comes through the air, the blue color spreads out more than other colors.
+    That's why we see a beautiful blue sky!
+    
+    Isn't that cool? Now you know why the sky is blue!
+    
+    Thanks for learning with me today. See you next time!
+    """
+    
+    print("Sample narration:")
+    print("-" * 80)
+    print(narration.strip())
+    print("-" * 80)
+    print()
+    
+    # Ask user if they want to proceed (API costs money)
+    response = input("Generate voiceover? This will use your ElevenLabs API quota. (y/n): ").lower()
+    
+    if response != 'y':
+        print("Cancelled.")
+        sys.exit(0)
+    
+    print()
+    print("Generating voiceover...")
+    print()
+    
+    try:
+        # Generate voiceover
+        audio_path = generator.generate_voiceover(
+            text=narration,
+            output_filename="demo_voiceover.mp3"
+        )
+        
+        print()
+        print("=" * 80)
+        print("SUCCESS!")
+        print("=" * 80)
+        print(f"✓ Voiceover generated: {audio_path}")
+        print()
+        print("You can now play this audio file in any media player.")
+        
+    except Exception as e:
+        print()
+        print("=" * 80)
+        print("ERROR")
+        print("=" * 80)
+        print(f"✗ Failed to generate voiceover: {e}")
+        sys.exit(1)

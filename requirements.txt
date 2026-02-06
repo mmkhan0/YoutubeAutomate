@@ -1,0 +1,28 @@
+# Core dependencies for YouTube automation system
+
+# OpenAI (topic selection, script generation, image generation, metadata)
+openai>=1.0.0
+
+# YouTube API
+google-api-python-client>=2.100.0
+google-auth-oauthlib>=1.0.0
+google-auth-httplib2>=0.1.0
+
+# ElevenLabs API (high-quality text-to-speech)
+elevenlabs>=0.2.0
+
+# Text-to-Speech fallback (free)
+gTTS>=2.4.0
+
+# Image Processing
+Pillow>=10.0.0
+requests>=2.31.0
+
+# Note: Audio merging is handled by FFmpeg (no pydub needed)
+# FFmpeg must be installed separately
+
+# Configuration and Environment
+python-dotenv>=1.0.0
+
+# Utilities
+python-dateutil>=2.8.2

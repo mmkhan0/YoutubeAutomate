@@ -1,0 +1,161 @@
+{
+  "automation": {
+    "enabled": true,
+    "run_on_schedule": true,
+    "daily_limit": 3,
+    "fail_silently": true,
+    "log_all_runs": true
+  },
+  
+  "content": {
+    "mode": "early_learning_only",
+    "age_group": "2-6",
+    "categories_allowed": [
+      "english_alphabet",
+      "hindi_alphabet",
+      "numbers_counting",
+      "colors_shapes",
+      "fruits_vegetables",
+      "animals_sounds",
+      "simple_logic",
+      "body_parts",
+      "daily_habits",
+      "emotions",
+      "basic_math",
+      "rhymes_learning",
+      "memory_games",
+      "puzzle_games",
+      "observation_games"
+    ],
+    "prevent_repetition": true,
+    "history_size": 5
+  },
+  
+  "video": {
+    "min_duration_seconds": 180,
+    "max_duration_seconds": 900,
+    "target_duration_seconds": 240,
+    "fps": 60,
+    "resolution": "1920x1080",
+    "voice_pace": "slow",
+    "use_repetition": true,
+    "style": "pixar_3d_cartoon"
+  },
+  
+  "language": {
+    "default": "en",
+    "supported": ["en", "hi", "both"],
+    "voice_speed": 0.85,
+    "child_friendly_only": true
+  },
+  
+  "youtube": {
+    "auto_upload": true,
+    "privacy_status": "public",
+    "made_for_kids": true,
+    "coppa_compliant": true,
+    "category_id": "27",
+    "no_manual_confirmation": true,
+    "auto_generate_metadata": true,
+    "scheduled_publishing": true,
+    "publish_delay_minutes": 15
+  },
+  
+  "seo": {
+    "auto_optimize": true,
+    "keywords_research": true,
+    "title_ab_testing": true,
+    "min_tags": 12,
+    "max_tags": 20,
+    "min_hashtags": 8,
+    "max_hashtags": 15
+  },
+  
+  "enhancements": {
+    "thumbnails": {
+      "enabled": true,
+      "bright_colors": true,
+      "age_badge": true,
+      "create_variants": false,
+      "num_variants": 3
+    },
+    "background_music": {
+      "enabled": true,
+      "volume": 0.15,
+      "ducking_enabled": true,
+      "ducking_amount": 0.4,
+      "fade_in_seconds": 2.0,
+      "fade_out_seconds": 3.0
+    },
+    "playlists": {
+      "enabled": true,
+      "auto_create": true,
+      "auto_organize": true,
+      "organize_by_category": true,
+      "organize_by_age": true,
+      "privacy_status": "public"
+    }
+  },
+  
+  "safety": {
+    "coppa_compliant": true,
+    "no_copyrighted_content": true,
+    "no_brand_names": true,
+    "age_appropriate_only": true,
+    "youtube_kids_safe": true
+  },
+  
+  "paths": {
+    "use_absolute_paths": true,
+    "output_dir": "output",
+    "data_dir": "data",
+    "logs_dir": "logs",
+    "config_dir": "config"
+  },
+  
+  "api": {
+    "openai_model": "gpt-4o-mini",
+    "openai_temperature": 0.7,
+    "dalle_model": "dall-e-3",
+    "dalle_quality": "standard",
+    "tts_provider": "gtts",
+    "tts_slow": true
+  },
+  
+  "scheduling": {
+    "compatible_with_task_scheduler": true,
+    "exit_on_failure": true,
+    "retry_on_transient_errors": true,
+    "max_retries": 3,
+    "log_to_file": true,
+    "no_user_interaction": true
+  },
+  
+  "logging": {
+    "level": "INFO",
+    "console": true,
+    "file": true,
+    "max_file_size_mb": 10,
+    "backup_count": 5,
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  },
+  
+  "cleanup": {
+    "auto_cleanup": true,
+    "keep_last_n_videos": 3,
+    "cleanup_before_generation": true,
+    "cleanup_audio": true,
+    "cleanup_images": true,
+    "cleanup_temp_clips": true
+  },
+  
+  "metadata": {
+    "auto_title": true,
+    "auto_description": true,
+    "auto_tags": true,
+    "include_hashtags": true,
+    "seo_optimized": true,
+    "age_disclosure": "2-6 years",
+    "educational_content": true
+  }
+}
