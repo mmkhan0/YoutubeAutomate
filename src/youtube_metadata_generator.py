@@ -210,10 +210,16 @@ class YouTubeMetadataGenerator:
                 {
                     "role": "system",
                     "content": (
-                        "You are an expert in YouTube SEO and children's educational content. "
-                        "You create engaging, searchable metadata that appeals to both kids and parents. "
-                        "Your titles are clear, descriptive, and optimized for search. "
-                        "You never use emojis in titles or call-to-action phrases."
+                        # CREATE Formula: Character
+                        "CHARACTER: You are a senior YouTube SEO strategist and children's content specialist "
+                        "with 10+ years optimizing metadata for channels with 1M+ subscribers. "
+                        # CREATE Formula: Adjustments
+                        "ADJUSTMENTS: You write titles that rank on page 1 of YouTube search, "
+                        "descriptions that convert impressions to clicks, and tags that maximize discoverability. "
+                        "You NEVER use emojis in titles, NEVER use clickbait, and NEVER include call-to-action phrases. "
+                        # CREATE Formula: Extras
+                        "EXTRAS: Your metadata always balances kid-appeal with parent trust, "
+                        "achieving 90%+ CTR on kids educational content."
                     )
                 },
                 {
@@ -262,59 +268,44 @@ class YouTubeMetadataGenerator:
         """
         context_section = f"\n\nCONTEXT:\n{context}" if context else ""
 
-        prompt = f"""Generate YouTube metadata for a kids educational video.
+        prompt = f"""=== CREATE FORMULA PROMPT ===
+
+[C] CHARACTER:
+You are a YouTube SEO metadata specialist for kids educational channels with proven ranking results.
+
+[R] REQUEST:
+Generate complete YouTube metadata (title, description, tags, hashtags) for this kids educational video:
 
 TOPIC: {topic}{context_section}
-
 TARGET AUDIENCE: Children aged 4-8 years and their parents
 VIDEO TYPE: Educational, family-friendly
 
-REQUIREMENTS:
+[E] EXAMPLES:
+Title example: "Why Do Leaves Change Colors? | Science for Kids"
+Description example: "Have you ever wondered why leaves turn red and orange in fall? Join us on a colorful adventure to discover the amazing science behind changing leaves!\n\nThis educational video teaches children about photosynthesis, chlorophyll, and seasonal changes through simple explanations and vibrant visuals. Perfect for preschool and kindergarten learners curious about nature."
+Tags example: ["why leaves change color", "science for kids", "fall leaves", "photosynthesis for kids", "nature education", "preschool science", "kindergarten learning"]
+Hashtags example: ["KidsScience", "NatureForKids", "EducationalVideos", "PreschoolLearning", "ScienceExplained"]
 
-1. TITLE ({self.MIN_TITLE_LENGTH}-{self.MAX_TITLE_LENGTH} characters):
-   - Clear, descriptive, and engaging
-   - Include main keywords for SEO
-   - Appeal to both kids and parents
-   - NO emojis (text only)
-   - NO click-bait language
-   - Should clearly state what the video is about
-   Example: "Why Do Leaves Change Colors? | Science for Kids"
+[A] ADJUSTMENTS:
+- TITLE ({self.MIN_TITLE_LENGTH}-{self.MAX_TITLE_LENGTH} chars): Include main keyword for SEO, clear and descriptive, NO emojis, NO clickbait, appeal to kids AND parents
+- DESCRIPTION (2 paragraphs separated by \n\n, ~{self.TARGET_DESCRIPTION_LENGTH} chars): Paragraph 1 = exciting overview for kids mentioning topic, Paragraph 2 = educational value for parents. Include topic keywords at least 3 times naturally. NO call-to-action (no subscribe/like/comment). NO hashtags in description.
+- TAGS ({self.MIN_TAGS}-{self.MAX_TAGS} tags, max {self.MAX_TAG_LENGTH} chars each): Mix broad + specific, include keyword variations, age group tags, category tags, long-tail keywords
+- HASHTAGS ({self.MIN_HASHTAGS}-{self.MAX_HASHTAGS}): camelCase, no spaces, mix trending + category + age-appropriate + general reach. First 3 are most important (appear above title)
 
-2. DESCRIPTION (2 paragraphs separated by a blank line, ~{self.TARGET_DESCRIPTION_LENGTH} characters):
-   - First paragraph: Brief overview for kids (simple, exciting, mention the topic)
-   - Second paragraph: Educational value for parents (what kids will learn)
-   - IMPORTANT: Include the main topic keywords at least 3 times naturally across both paragraphs
-   - Separate the two paragraphs with \n\n (blank line)
-   - NO call-to-action text (no "subscribe", "like", "comment", etc.)
-   - Friendly, informative tone
-   - Do NOT include hashtags in description (they will be added separately)
-
-3. TAGS ({self.MIN_TAGS}-{self.MAX_TAGS} tags):
-   - Mix of broad and specific tags
-   - Include variations of main keywords
-   - Age group tags (preschool, kindergarten, early learning)
-   - Category tags (science, nature, education, kids learning)
-   - Long-tail keywords for better SEO
-   - Each tag max {self.MAX_TAG_LENGTH} characters
-   - Focus on searchable terms parents and kids use
-
-4. HASHTAGS ({self.MIN_HASHTAGS}-{self.MAX_HASHTAGS} hashtags):
-   - Trending educational hashtags
-   - Category-specific hashtags (e.g., KidsScience, LearnWithFun)
-   - Age-appropriate hashtags (e.g., PreschoolLearning, KidsEducation)
-   - General reach hashtags (e.g., EducationalVideos, LearningForKids)
-   - Single words or camelCase phrases (no spaces)
-   - First 3 hashtags appear above the video title (most important)
-   - Mix of popular and niche hashtags for maximum reach
-   - Examples: KidsLearning, EducationalContent, ScienceForKids, FunLearning
-
+[T] TYPE OF OUTPUT:
 Return ONLY valid JSON (no markdown, no code blocks):
 {{
   "title": "Video Title Here",
   "description": "First paragraph for kids...\\n\\nSecond paragraph for parents...",
   "tags": ["tag1", "tag2", "tag3", "tag4", "tag5", "tag6", "tag7", "tag8", "tag9", "tag10", "tag11", "tag12"],
   "hashtags": ["KidsLearning", "EducationalVideos", "ScienceForKids", "FunLearning", "PreschoolEducation"]
-}}"""
+}}
+
+[E] EXTRAS:
+- Title must clearly state what the video is about in plain language
+- Description keywords should feel natural, not stuffed
+- Tags should include terms parents actually search for on YouTube
+- Prioritize discovery and click-through over creativity"""
 
         return prompt
 

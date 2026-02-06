@@ -323,34 +323,44 @@ class KidsImageGenerator:
         Returns:
             str: Complete DALL-E prompt with optimized cartoon style
         """
-        # Enhanced style guidelines for high-quality kids cartoon content
-        # Inspired by Disney, Pixar, and modern children's book illustrations
+        # === CREATE Formula for DALL-E Image Generation ===
+
+        # [C] CHARACTER: Pixar-Disney master illustrator persona
         style = (
-            "High-quality 3D cartoon illustration in vibrant Pixar-Disney style "
-            "for children aged 4-8. Ultra-colorful with saturated bright colors, "
-            "soft rounded shapes, big expressive eyes, friendly smiling characters. "
-            "Professional children's book illustration quality with soft lighting, "
-            "gentle gradients, smooth textures. Cheerful, warm, inviting atmosphere. "
-            "Clean composition with clear focal point. Playful and educational. "
-            "Cute proportions with large heads and small bodies. Smooth 3D rendering style. "
-            "No text, no words, no letters, no watermarks, no labels."
+            "CHARACTER: A Pixar-Disney senior concept artist creating illustrations "
+            "for a top-rated children's educational YouTube channel. "
         )
 
-        # Combine description with visual suggestions
+        # [R] REQUEST + [A] ADJUSTMENTS: Scene description with visual constraints
         if visual_suggestions:
             scene_elements = ', '.join(visual_suggestions[:3])
-            content = f"{description}. Featured elements: {scene_elements}."
+            content = f"REQUEST: Illustrate this scene: {description}. Featured elements: {scene_elements}."
         else:
-            content = description
+            content = f"REQUEST: Illustrate this scene: {description}."
 
-        # Add composition and quality enhancers
-        quality_keywords = (
-            "Professional digital art, high detail, sharp focus, perfect composition, "
-            "trending on children's illustration platforms, award-winning style"
+        # [E] EXAMPLES (style reference): Visual style guidelines
+        style_guide = (
+            "STYLE REFERENCE: High-quality 3D cartoon, vibrant saturated colors, "
+            "soft rounded shapes, big expressive eyes, friendly smiling characters, "
+            "soft lighting, gentle gradients, smooth textures. Cute proportions "
+            "with large heads and small bodies. Clean composition, clear focal point. "
         )
 
-        # Complete prompt with style + content + quality
-        prompt = f"{style} Scene: {content} {quality_keywords}"
+        # [A] ADJUSTMENTS: Strict constraints
+        adjustments = (
+            "ADJUSTMENTS: Target audience ages 4-8. Cheerful warm inviting atmosphere. "
+            "Playful and educational mood. "
+            "NEVER include text, words, letters, watermarks, or labels. "
+        )
+
+        # [T] TYPE + [E] EXTRAS: Output quality specifications
+        quality_keywords = (
+            "TYPE: Professional children's book illustration, high detail, sharp focus, "
+            "perfect composition, smooth 3D rendering, award-winning style"
+        )
+
+        # Complete prompt with CREATE structure
+        prompt = f"{style}{style_guide}{adjustments}{content} {quality_keywords}"
 
         # Ensure prompt isn't too long (DALL-E has limits)
         if len(prompt) > 1000:

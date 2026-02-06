@@ -157,35 +157,41 @@ class KidsTopicSelector:
         """
         if self.category == 'tech':
             return (
-                "You are a technology education specialist. "
-                "You create engaging, informative video topics about technology, "
-                "computers, internet, AI, robotics, and how digital things work. "
-                "Focus on educational tech content suitable for all ages. "
-                "Never suggest copyrighted characters or branded content."
+                # CREATE Formula: Character + Adjustments + Extras
+                "CHARACTER: You are a senior technology educator and viral YouTube content strategist "
+                "with 10 years of experience creating tech-explainer videos that get millions of views. "
+                "ADJUSTMENTS: You specialize in breaking down complex technology concepts into "
+                "simple, visual explanations suitable for all ages. "
+                "EXTRAS: You never suggest copyrighted characters or branded content. "
+                "You always pick evergreen topics with high search volume."
             )
         elif self.category == 'kids':
             return (
-                "You are a children's educational content specialist. "
-                "You create safe, engaging, and age-appropriate video topics "
-                "for preschool and early elementary children (ages 4-8). "
-                "Focus on animals, nature, colors, numbers, and basic concepts. "
-                "Never suggest copyrighted characters or branded content."
+                "CHARACTER: You are a children's educational content strategist with 15 years "
+                "creating safe, engaging video topics for preschool and early elementary children (ages 4-8). "
+                "ADJUSTMENTS: You focus on animals, nature, colors, numbers, and basic science concepts "
+                "that spark curiosity and joy. "
+                "EXTRAS: You NEVER suggest copyrighted characters (Disney, Marvel, Nickelodeon, etc.) "
+                "or branded content. Topics must be evergreen and parent-approved."
             )
         elif self.category == 'science':
             return (
-                "You are a science education specialist. "
-                "You create engaging video topics about physics, chemistry, biology, "
-                "and natural phenomena. Explain scientific concepts in simple terms. "
-                "Focus on educational science content suitable for all ages. "
-                "Never suggest copyrighted characters or branded content."
+                "CHARACTER: You are a science communication expert and viral educational "
+                "content creator with a talent for making physics, chemistry, and biology "
+                "fascinating and simple for any age. "
+                "ADJUSTMENTS: You translate complex scientific concepts into visual, "
+                "easy-to-understand explanations. "
+                "EXTRAS: You never suggest copyrighted characters or branded content. "
+                "Your topics always pass the 'I never knew that!' test."
             )
         else:  # auto
             return (
-                "You are an educational content specialist. "
-                "You create engaging, informative video topics about technology, "
-                "science, nature, and how things work. "
-                "Focus on educational content suitable for all ages. "
-                "Never suggest copyrighted characters or branded content."
+                "CHARACTER: You are a versatile educational content strategist who creates "
+                "engaging video topics across technology, science, nature, and how things work. "
+                "ADJUSTMENTS: You focus on educational content suitable for all ages "
+                "with high search potential on YouTube. "
+                "EXTRAS: You never suggest copyrighted characters or branded content. "
+                "You prioritize topics with proven viewer interest."
             )
 
     def _build_prompt(self) -> str:
@@ -206,36 +212,63 @@ class KidsTopicSelector:
 
     def _build_tech_prompt(self) -> str:
         """Build tech category prompt."""
-        return f"""Generate ONE educational and engaging YouTube video topic about TECHNOLOGY, COMPUTERS, or HOW THINGS WORK.
+        return f"""=== CREATE FORMULA PROMPT ===
 
-Requirements:
+[C] CHARACTER:
+You are a senior tech education YouTuber who selects viral-worthy video topics.
+
+[R] REQUEST:
+Generate ONE educational and engaging YouTube video topic about TECHNOLOGY, COMPUTERS, or HOW THINGS WORK.
+
+[E] EXAMPLES:
+- "How Does a Computer Process Information?"
+- "How Does WiFi Send Data Through the Air?"
+- "What is AI and How Do Computers Learn?"
+- "How Do Robots See and Move Around?"
+- "How Does a Touchscreen Know Where You Touch?"
+- "How Are Video Games Created and Programmed?"
+- "How Do Batteries Store and Release Energy?"
+- "How Do Video Calls Work Across the World?"
+- "What is Programming and How Does Code Work?"
+- "What is Virtual Reality and How Does It Work?"
+
+[A] ADJUSTMENTS:
 - Must be educational and informative about technology/science
 - Evergreen content (not tied to trends or specific products)
 - Explain how technology works in simple terms
 - NO copyrighted characters or specific brand names
 - Should be clear and specific (50-70 characters)
 
-Great topic categories:
-• How computers work (e.g., "How Does a Computer Process Information?")
-• Internet & connectivity (e.g., "How Does WiFi Send Data Through the Air?")
-• Artificial Intelligence (e.g., "What is AI and How Do Computers Learn?")
-• Robotics (e.g., "How Do Robots See and Move Around?")
-• Smartphones & devices (e.g., "How Does a Touchscreen Know Where You Touch?")
-• Gaming technology (e.g., "How Are Video Games Created and Programmed?")
-• Energy & power (e.g., "How Do Batteries Store and Release Energy?")
-• Digital communication (e.g., "How Do Video Calls Work Across the World?")
-• Coding concepts (e.g., "What is Programming and How Does Code Work?")
-• Future tech (e.g., "What is Virtual Reality and How Does It Work?")
+[T] TYPE OF OUTPUT:
+Return ONLY the video topic as a single line of text. No explanations, no quotes, just the topic.
 
-Return ONLY the video topic as a single line of text. No explanations, no quotes around it, just the topic.
+[E] EXTRAS:
+- Pick a topic with high YouTube search volume
+- Think about what people actually search for
 
 Topic:"""
 
     def _build_kids_prompt(self) -> str:
         """Build kids category prompt."""
-        return f"""Generate ONE educational and engaging YouTube video topic for children aged 4-8 years.
+        return f"""=== CREATE FORMULA PROMPT ===
 
-Requirements:
+[C] CHARACTER:
+You are a children's content strategist selecting the perfect video topic for kids aged 4-8.
+
+[R] REQUEST:
+Generate ONE educational and engaging YouTube video topic for young children.
+
+[E] EXAMPLES:
+- "How Do Dolphins Talk to Each Other?"
+- "Learning to Count from 1 to 20 with Fun Objects"
+- "Finding Shapes in Nature - A Fun Adventure"
+- "Why Do Leaves Change Colors?"
+- "The Story of the Kind Little Turtle"
+- "Amazing Facts About Butterflies"
+- "Why Do We Need to Sleep?"
+- "The Morning Routine Song"
+
+[A] ADJUSTMENTS:
 - Must be educational, entertaining, or story-based
 - Evergreen content (not tied to trends or seasons)
 - Safe for young children (no violence, fear, or complex topics)
@@ -243,44 +276,50 @@ Requirements:
 - NO brand names or products
 - Should be clear and specific (50-70 characters)
 
-Great topic categories:
-• Animal facts and sounds (e.g., "How Do Dolphins Talk to Each Other?")
-• Numbers and counting (e.g., "Learning to Count from 1 to 20 with Fun Objects")
-• Colors and shapes (e.g., "Finding Shapes in Nature - A Fun Adventure")
-• Simple science (e.g., "Why Do Leaves Change Colors?")
-• Life lessons (e.g., "The Story of the Kind Little Turtle")
-• Nature exploration (e.g., "Amazing Facts About Butterflies")
-• Body and health (e.g., "Why Do We Need to Sleep?")
-• Daily routines (e.g., "The Morning Routine Song")
+[T] TYPE OF OUTPUT:
+Return ONLY the video topic as a single line of text. No explanations, no quotes, just the topic.
 
-Return ONLY the video topic as a single line of text. No explanations, no quotes around it, just the topic.
+[E] EXTRAS:
+- Focus on topics that make kids say "wow!" or "why?"
+- Parents should feel good about their child watching this
 
 Topic:"""
 
     def _build_science_prompt(self) -> str:
         """Build science category prompt."""
-        return f"""Generate ONE educational and engaging YouTube video topic about SCIENCE and HOW NATURE WORKS.
+        return f"""=== CREATE FORMULA PROMPT ===
 
-Requirements:
+[C] CHARACTER:
+You are a science communicator selecting a captivating video topic about how nature and science work.
+
+[R] REQUEST:
+Generate ONE educational and engaging YouTube video topic about SCIENCE and HOW NATURE WORKS.
+
+[E] EXAMPLES:
+- "How Does Gravity Keep Us on the Ground?"
+- "What Happens When Ice Melts? The Science of States"
+- "How Do Plants Make Food from Sunlight?"
+- "Why Do We Have Seasons? Earth's Tilt Explained"
+- "How Are Clouds Formed in the Sky?"
+- "Why Does the Moon Change Shape? Lunar Phases"
+- "The Water Cycle: From Rain to Rivers to Clouds"
+- "How Do Our Eyes See Colors?"
+- "What is Energy and Where Does It Come From?"
+- "Why Do We See Rainbows After Rain?"
+
+[A] ADJUSTMENTS:
 - Must be educational and informative about scientific concepts
 - Evergreen content (not tied to trends or specific products)
 - Explain science in simple, understandable terms
 - NO copyrighted characters or specific brand names
 - Should be clear and specific (50-70 characters)
 
-Great topic categories:
-• Physics (e.g., "How Does Gravity Keep Us on the Ground?")
-• Chemistry (e.g., "What Happens When Ice Melts? The Science of States")
-• Biology (e.g., "How Do Plants Make Food from Sunlight?")
-• Earth science (e.g., "Why Do We Have Seasons? Earth's Tilt Explained")
-• Weather (e.g., "How Are Clouds Formed in the Sky?")
-• Space (e.g., "Why Does the Moon Change Shape? Lunar Phases")
-• Environment (e.g., "The Water Cycle: From Rain to Rivers to Clouds")
-• Human body (e.g., "How Do Our Eyes See Colors?")
-• Energy (e.g., "What is Energy and Where Does It Come From?")
-• Natural phenomena (e.g., "Why Do We See Rainbows After Rain?")
+[T] TYPE OF OUTPUT:
+Return ONLY the video topic as a single line of text. No explanations, no quotes, just the topic.
 
-Return ONLY the video topic as a single line of text. No explanations, no quotes around it, just the topic.
+[E] EXTRAS:
+- Pick a topic that triggers curiosity and the "I never knew that!" reaction
+- Ensure the topic can be visually explained in a video
 
 Topic:"""
 

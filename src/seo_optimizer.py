@@ -101,40 +101,35 @@ class YouTubeSEOOptimizer:
         """
         self.logger.info(f"🔍 Researching keywords for: {topic}")
 
-        prompt = f"""You are a YouTube SEO expert. Research and provide comprehensive keyword data for this video:
+        prompt = f"""=== CREATE FORMULA PROMPT ===
+
+[C] CHARACTER:
+You are a YouTube SEO data analyst specializing in children's educational content with deep expertise in YouTube's search algorithm and keyword ranking patterns.
+
+[R] REQUEST:
+Perform comprehensive keyword research for this kids educational video:
 
 TOPIC: {topic}
 CATEGORY: {category}
 LANGUAGE: {language}
 TARGET AUDIENCE: Parents searching for kids educational content + Kids searching directly
 
-Provide detailed keyword research:
+[E] EXAMPLES:
+For a video about "Why Do Leaves Change Color":
+- Primary: ["leaves change color", "why leaves change color for kids", "autumn science kids"]
+- Long-tail: ["why do leaves change color in fall for kids", "leaf color science experiment preschool"]
+- Trending: ["fall science activities", "nature for kids 2024"]
 
-1. PRIMARY KEYWORDS (3-5 main keywords):
-   - Core topic keywords that define the video
-   - High search volume, highly relevant
+[A] ADJUSTMENTS:
+- PRIMARY KEYWORDS (3-5): Core topic keywords, high search volume, highly relevant
+- SECONDARY KEYWORDS (5-8): Supporting keywords that expand reach, medium volume
+- LONG-TAIL KEYWORDS (5-10): Exact phrases parents/kids would search, lower competition, high conversion
+- TRENDING KEYWORDS (3-5): Currently popular or seasonal keywords in this category
+- COMPETITOR KEYWORDS (5-8): Keywords proven to drive views from top-performing videos in this niche
+- SEARCH VOLUME ESTIMATES: Classify each primary keyword as High, Medium, or Low
 
-2. SECONDARY KEYWORDS (5-8 related keywords):
-   - Supporting keywords that expand reach
-   - Medium search volume, relevant
-
-3. LONG-TAIL KEYWORDS (5-10 specific phrases):
-   - Exact phrases parents/kids would search
-   - Examples: "why do leaves change color for kids", "butterfly life cycle explained simple"
-   - Lower competition, high conversion
-
-4. TRENDING KEYWORDS (3-5 current trends):
-   - Currently popular keywords in this category
-   - Seasonal or viral trends related to topic
-
-5. COMPETITOR KEYWORDS (5-8 from top videos):
-   - Keywords used by successful videos in this niche
-   - Proven to drive views and engagement
-
-6. SEARCH VOLUME ESTIMATES:
-   - Classify each primary keyword as: High, Medium, or Low search volume
-
-Return JSON only:
+[T] TYPE OF OUTPUT:
+Return JSON only (no markdown, no code blocks):
 {{
   "primary_keywords": ["keyword1", "keyword2", "keyword3"],
   "secondary_keywords": ["keyword4", "keyword5", "keyword6", "keyword7", "keyword8"],
@@ -146,13 +141,22 @@ Return JSON only:
     "keyword2": "Medium",
     "keyword3": "Low"
   }}
-}}"""
+}}
+
+[E] EXTRAS:
+- Focus on keywords that parents actually type into YouTube search
+- Include question-format keywords ("why", "how", "what is")
+- Prioritize discoverability over creativity"""
 
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
-                    {"role": "system", "content": "You are a YouTube SEO research expert."},
+                    {"role": "system", "content": (
+                        "CHARACTER: You are a senior YouTube SEO research analyst "
+                        "with 10 years of experience in children's content keyword optimization. "
+                        "You use data-driven approaches to identify high-impact keywords."
+                    )},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=self.temperature,
@@ -224,29 +228,35 @@ LONG-TAIL KEYWORDS: {', '.join(keywords.long_tail_keywords[:3])}
 TRENDING: {', '.join(keywords.trending_keywords[:2])}
 """
 
-        prompt = f"""Generate {generate_variants} optimized YouTube title variants for kids educational content.
+        prompt = f"""=== CREATE FORMULA PROMPT ===
+
+[C] CHARACTER:
+You are a YouTube title copywriter specializing in kids educational channels with proven click-through rate optimization skills.
+
+[R] REQUEST:
+Generate {generate_variants} optimized YouTube title variants for this kids educational video:
 
 TOPIC: {topic}
-
 {keyword_context}
 
-TITLE REQUIREMENTS:
+[E] EXAMPLES:
+- Keyword-first: "Butterfly Life Cycle | Science for Kids"
+- Question format: "Why Do Caterpillars Turn Into Butterflies?"
+- List format: "5 Amazing Facts About Butterflies for Kids"
+- Benefit-focused: "Learn How Butterflies Are Born | Kids Science"
+- Curiosity-driven: "The Incredible Secret Life of Butterflies"
+
+[A] ADJUSTMENTS:
 - 40-70 characters (optimal for mobile + desktop)
 - Include primary keyword in first 40 characters
-- Clear, descriptive, click-worthy
-- NO emojis, NO clickbait
+- Clear, descriptive, and click-worthy
+- NO emojis, NO clickbait, NO all-caps
 - Appeal to both kids AND parents
-- Natural, easy to read
+- Natural and easy to read
+- Use one of these strategies per variant: keyword-first, question-format, list-format, benefit-focused, curiosity-driven
 
-OPTIMIZATION STRATEGIES:
-1. Keyword-first: Start with main keyword
-2. Question format: "Why Do...", "How Does...", "What Is..."
-3. List format: Include "5 Facts", "Amazing Things"
-4. Benefit-focused: "Learn About...", "Discover..."
-5. Curiosity-driven: Create intrigue while staying educational
-
-Return {generate_variants} diverse variants with SEO scores (0-100):
-
+[T] TYPE OF OUTPUT:
+Return JSON only (no markdown, no code blocks):
 {{
   "variants": [
     {{"title": "Title 1", "seo_score": 85, "strategy": "keyword-first"}},
@@ -255,13 +265,22 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
     {{"title": "Title 4", "seo_score": 88, "strategy": "benefit-focused"}},
     {{"title": "Title 5", "seo_score": 82, "strategy": "curiosity-driven"}}
   ]
-}}"""
+}}
+
+[E] EXTRAS:
+- Score each title honestly based on keyword placement, length, clarity, and search appeal
+- Each variant must use a DIFFERENT strategy
+- Prioritize searchability over cleverness"""
 
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
-                    {"role": "system", "content": "You are a YouTube SEO title optimization expert."},
+                    {"role": "system", "content": (
+                        "CHARACTER: You are an elite YouTube title optimization expert "
+                        "who has written titles for channels with 10M+ views. "
+                        "You balance SEO precision with kid-friendly appeal."
+                    )},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.8,  # Higher creativity for variants

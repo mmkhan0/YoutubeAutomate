@@ -243,11 +243,18 @@ class KidsScriptGenerator:
                 {
                     "role": "system",
                     "content": (
-                        f"You are an expert children's educational content writer. "
-                        f"You create engaging, educational scripts for YouTube videos "
-                        f"for children aged 4-8 years.{language_instruction} "
-                        f"Your writing is simple, clear, warm, and encouraging. "
-                        f"You use short sentences, simple words, and an enthusiastic but calm tone."
+                        # CREATE Formula: Character
+                        "CHARACTER: You are a world-class children's educational scriptwriter "
+                        "with 15 years of experience writing for PBS Kids, Sesame Street, "
+                        f"and top YouTube educational channels.{language_instruction} "
+                        # CREATE Formula: Adjustments
+                        "ADJUSTMENTS: Your writing style uses short sentences (5-10 words), "
+                        "grade 1-2 vocabulary, present tense, and a warm conversational tone. "
+                        "You never use complex words, violence, fear, or copyrighted characters. "
+                        # CREATE Formula: Extras
+                        "EXTRAS: Every script you write scores 95%+ on readability for ages 4-8, "
+                        "maintains attention with questions and exclamations every 3-4 sentences, "
+                        "and naturally includes pauses via punctuation for voiceover timing."
                     )
                 },
                 {
@@ -300,46 +307,37 @@ class KidsScriptGenerator:
         if self.language != 'en':
             language_instruction = f"\n\n🌐 IMPORTANT: Write the ENTIRE script in {language_name}. The narration text, titles, and visual suggestions must ALL be in {language_name}, not English."
 
-        prompt = f"""Create a complete narration script for a kids YouTube video on this topic:
+        prompt = f"""=== CREATE FORMULA PROMPT ===
 
+[C] CHARACTER:
+You are a top children's educational scriptwriter creating narration for a YouTube kids video.
+
+[R] REQUEST:
+Write a complete narration script for this video topic:
 TOPIC: {topic}{language_instruction}
 
-TARGET AUDIENCE: Children aged 4-8 years
-VIDEO LENGTH: {minutes} minutes ({duration} seconds)
-TARGET WORD COUNT: ~{structure['total_words']} words
+Video specs: {minutes} minutes ({duration} seconds), ~{structure['total_words']} words total.
 
-STRUCTURE REQUIREMENTS:
-1. INTRO ({structure['intro_duration']} seconds):
-   - Start with an exciting hook to grab attention
-   - Introduce the topic in simple terms
-   - Build curiosity about what's coming
+[E] EXAMPLES:
+Here is the quality and style to follow:
+- Hook: "Hey friends! Have you ever looked up at the sky and wondered... why is it blue?"
+- Teaching: "The sky looks blue because of tiny bits of light. Cool, right?"
+- Engagement: "Can you guess what happens next? That's right!"
+- Outro: "Wow, we learned so much today! You are so smart. See you next time!"
 
-2. BODY ({structure['body_sections']} sections of ~{structure['section_duration']} seconds each):
-   - Each section covers one key point or idea
-   - Use simple, clear language
-   - Include engaging questions to keep kids thinking
-   - Add excitement with "Wow!" "Amazing!" "Cool!" moments
+[A] ADJUSTMENTS:
+- Sentences: 5-10 words each, grade 1-2 reading level
+- Tone: Warm, friendly, calm but enthusiastic (like a kind teacher)
+- Engagement: Add "Wow!" "Amazing!" "Did you know?" "Let's find out!" every 3-4 sentences
+- Pauses: Use periods and commas naturally for voiceover breathing
+- NEVER use: complex vocabulary, scary topics, copyrighted characters, brand names
+- Structure:
+  * INTRO ({structure['intro_duration']}s): Exciting hook + introduce topic + build curiosity
+  * BODY ({structure['body_sections']} sections x ~{structure['section_duration']}s): One key idea per section with questions
+  * OUTRO ({structure['outro_duration']}s): Recap + positive message + gentle encouragement
 
-3. OUTRO ({structure['outro_duration']} seconds):
-   - Quick recap of what we learned
-   - Positive, encouraging message
-   - Gentle call-to-action (learn more, explore, etc.)
-
-LANGUAGE GUIDELINES:
-- Use SHORT sentences (5-10 words)
-- Use SIMPLE words (grade 1-2 reading level)
-- Use present tense when possible
-- Be conversational ("Did you know?" "Let's see!" "Guess what?")
-- Include pauses naturally (periods and commas)
-- NO complex vocabulary or long explanations
-
-TONE:
-- Warm, friendly, and enthusiastic
-- Like a kind teacher talking to children
-- Calm but engaging (not overly hyper)
-- Encouraging and positive
-
-Return ONLY valid JSON in this exact format (no markdown, no code blocks):
+[T] TYPE OF OUTPUT:
+Return ONLY valid JSON (no markdown, no code blocks) in this exact format:
 {{
   "intro": {{
     "title": "Introduction",
@@ -364,7 +362,13 @@ Return ONLY valid JSON in this exact format (no markdown, no code blocks):
   }}
 }}
 
-Create the script now:"""
+[E] EXTRAS:
+- Each body section MUST have exactly 3 visual_suggestions describing what to show on screen
+- Visual suggestions should be specific and descriptive (e.g., "A happy cartoon elephant splashing in water" not just "elephant")
+- Narration word count per section should match the duration (roughly 2.5 words per second)
+- Make the intro hook irresistible - kids should want to keep watching
+
+Generate the script now:"""
 
         return prompt
 
