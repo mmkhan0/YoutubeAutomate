@@ -11,6 +11,11 @@ from pathlib import Path
 from logging.handlers import RotatingFileHandler
 from datetime import datetime
 
+# Fix Windows console encoding for emoji/unicode in log messages
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+
 
 def setup_logging(log_level: str = "INFO") -> logging.Logger:
     """

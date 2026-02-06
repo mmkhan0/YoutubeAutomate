@@ -23,6 +23,11 @@ import functools
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, Callable
+
+# Fix Windows console encoding for emoji/unicode in log messages
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -1103,6 +1108,7 @@ class YouTubeAutomationOrchestrator:
             # Update metadata
             base_metadata.tags = enhanced_dict['tags']
             base_metadata.hashtags = enhanced_dict['hashtags']
+            base_metadata.description = enhanced_dict.get('description', base_metadata.description)
 
             self.logger.info("✓ Metadata enhanced")
             self.logger.info(f"   • Tags: {len(base_metadata.tags)}")

@@ -379,8 +379,19 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
         else:
             description_score += 20
 
-        # Keyword mentions (3-5 times optimal)
-        keyword_count = sum(kw.lower() in description_lower for kw in keywords.primary_keywords)
+        # Keyword mentions (count how many primary keywords appear in description)
+        # Check both exact phrase and individual significant words
+        keyword_count = 0
+        for kw in keywords.primary_keywords:
+            kw_lower = kw.lower()
+            if kw_lower in description_lower:
+                keyword_count += 1
+            else:
+                # Check if all significant words (3+ chars) from the keyword appear
+                words = [w for w in kw_lower.split() if len(w) >= 3]
+                if words and all(w in description_lower for w in words):
+                    keyword_count += 1
+
         if 2 <= keyword_count <= 5:
             description_score += 35
             strengths.append(f"Good keyword density ({keyword_count} mentions)")
@@ -423,13 +434,28 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
             tags_score += 25
 
         # Tag diversity (mix of keywords)
-        tags_lower = [t.lower() for t in tags]
-        primary_in_tags = sum(1 for kw in keywords.primary_keywords if kw.lower() in ' '.join(tags_lower))
-        secondary_in_tags = sum(1 for kw in keywords.secondary_keywords[:5] if kw.lower() in ' '.join(tags_lower))
+        # Use flexible matching: check if significant words from keywords appear in tags
+        tags_joined = ' '.join(t.lower() for t in tags)
+
+        def _keyword_in_text(keyword, text):
+            """Check if keyword or its significant words appear in text."""
+            kw_lower = keyword.lower()
+            if kw_lower in text:
+                return True
+            # Check if all significant words (3+ chars) from the keyword appear
+            words = [w for w in kw_lower.split() if len(w) >= 3]
+            if words and sum(1 for w in words if w in text) >= max(1, len(words) - 1):
+                return True
+            return False
+
+        primary_in_tags = sum(1 for kw in keywords.primary_keywords if _keyword_in_text(kw, tags_joined))
+        secondary_in_tags = sum(1 for kw in keywords.secondary_keywords[:5] if _keyword_in_text(kw, tags_joined))
 
         if primary_in_tags >= 2:
             tags_score += 35
             strengths.append("Primary keywords well-represented in tags")
+        elif primary_in_tags >= 1:
+            tags_score += 20
         else:
             recommendations.append("Include more primary keywords as tags")
 
@@ -437,7 +463,7 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
             tags_score += 20
 
         # Long-tail tags
-        longtail_in_tags = any(kw.lower() in ' '.join(tags_lower) for kw in keywords.long_tail_keywords[:3])
+        longtail_in_tags = any(_keyword_in_text(kw, tags_joined) for kw in keywords.long_tail_keywords[:3])
         if longtail_in_tags:
             tags_score += 15
             strengths.append("Long-tail keywords used in tags")
@@ -457,18 +483,23 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
         else:
             hashtags_score += 30
 
-        # Trending hashtags
-        trending_in_hashtags = any(kw.replace(' ', '') in ''.join(hashtags).lower()
-                                   for kw in keywords.trending_keywords)
+        # Trending hashtags - check both with and without spaces
+        hashtags_lower = ' '.join(h.lower() for h in hashtags)
+        hashtags_nospace = ''.join(hashtags).lower()
+        trending_in_hashtags = any(
+            kw.replace(' ', '').lower() in hashtags_nospace
+            or _keyword_in_text(kw, hashtags_lower)
+            for kw in keywords.trending_keywords
+        )
         if trending_in_hashtags:
             hashtags_score += 30
             strengths.append("Trending keywords included as hashtags")
         else:
             recommendations.append("Add current trending keywords as hashtags")
 
-        # Category hashtags
-        category_hashtags = ['KidsEducation', 'LearningForKids', 'EducationalVideos']
-        has_category = any(h in hashtags for h in category_hashtags)
+        # Category hashtags - check case-insensitively
+        category_hashtags = ['kidseducation', 'learningforkids', 'educationalvideos']
+        has_category = any(h.lower() in category_hashtags for h in hashtags)
         if has_category:
             hashtags_score += 30
         else:
@@ -477,9 +508,10 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
         hashtags_score = min(hashtags_score, 100)
 
         # Keyword density score (0-100)
-        total_text = f"{title} {description} {' '.join(tags)}".lower()
-        total_keywords = sum(kw.lower() in total_text for kw in
-                           keywords.primary_keywords + keywords.secondary_keywords[:5])
+        # Check how many keywords appear across all metadata using flexible matching
+        total_text = f"{title} {description} {' '.join(tags)} {' '.join(hashtags)}".lower()
+        all_keywords = keywords.primary_keywords + keywords.secondary_keywords[:5]
+        total_keywords = sum(1 for kw in all_keywords if _keyword_in_text(kw, total_text))
 
         if total_keywords >= 8:
             keyword_density_score = 100
@@ -533,10 +565,43 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
 
         enhanced = metadata.copy()
 
-        # Enhance tags with long-tail keywords
+        # --- Enhance description with keywords ---
+        description = enhanced.get('description', '')
+
+        # Ensure 2-paragraph structure
+        if '\n\n' not in description:
+            # Split roughly in half at the nearest sentence boundary
+            sentences = description.replace('. ', '.\n').split('\n')
+            mid = max(1, len(sentences) // 2)
+            first_half = '. '.join(s.strip().rstrip('.') for s in sentences[:mid] if s.strip()) + '.'
+            second_half = '. '.join(s.strip().rstrip('.') for s in sentences[mid:] if s.strip()) + '.'
+            description = f"{first_half}\n\n{second_half}"
+
+        # Add a keyword-rich closing sentence with long-tail keywords
+        desc_lower = description.lower()
+        missing_keywords = [
+            kw for kw in keywords.primary_keywords[:3]
+            if kw.lower() not in desc_lower
+        ]
+        missing_longtail = [
+            kw for kw in keywords.long_tail_keywords[:3]
+            if kw.lower() not in desc_lower
+        ]
+
+        if missing_keywords or missing_longtail:
+            # Build a natural keyword sentence
+            all_missing = missing_keywords[:2] + missing_longtail[:2]
+            if all_missing:
+                keyword_sentence = f"Learn about {', '.join(all_missing[:-1])}" \
+                    + (f" and {all_missing[-1]}" if len(all_missing) > 1 else f" {all_missing[0]}") \
+                    + " in this fun educational video for kids."
+                description = description.rstrip() + "\n\n" + keyword_sentence
+
+        enhanced['description'] = description
+
+        # --- Enhance tags with long-tail keywords ---
         current_tags = set(t.lower() for t in enhanced.get('tags', []))
 
-        # Add long-tail keywords as tags (if not too long)
         for longtail in keywords.long_tail_keywords:
             if len(longtail) <= 30 and longtail.lower() not in ' '.join(current_tags):
                 enhanced['tags'].append(longtail)
@@ -546,10 +611,15 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
             if len(trending) <= 30 and trending.lower() not in ' '.join(current_tags):
                 enhanced['tags'].append(trending)
 
+        # Add secondary keywords as tags
+        for secondary in keywords.secondary_keywords[:5]:
+            if len(secondary) <= 30 and secondary.lower() not in ' '.join(current_tags):
+                enhanced['tags'].append(secondary)
+
         # Limit to 20 tags
         enhanced['tags'] = enhanced['tags'][:20]
 
-        # Enhance hashtags with trending keywords
+        # --- Enhance hashtags with trending keywords ---
         current_hashtags = set(h.lower() for h in enhanced.get('hashtags', []))
 
         for trending in keywords.trending_keywords:
@@ -562,6 +632,12 @@ Return {generate_variants} diverse variants with SEO scores (0-100):
             hashtag = comp.replace(' ', '').replace('-', '')
             if len(hashtag) <= 30 and hashtag.lower() not in current_hashtags:
                 enhanced['hashtags'].append(hashtag)
+
+        # Ensure category hashtags are present
+        essential_hashtags = ['KidsEducation', 'LearningForKids', 'EducationalVideos']
+        for eh in essential_hashtags:
+            if eh.lower() not in current_hashtags:
+                enhanced['hashtags'].append(eh)
 
         # Limit to 15 hashtags
         enhanced['hashtags'] = enhanced['hashtags'][:15]

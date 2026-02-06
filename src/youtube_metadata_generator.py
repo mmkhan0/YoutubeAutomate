@@ -280,10 +280,11 @@ REQUIREMENTS:
    - Should clearly state what the video is about
    Example: "Why Do Leaves Change Colors? | Science for Kids"
 
-2. DESCRIPTION (2 paragraphs, ~{self.TARGET_DESCRIPTION_LENGTH} characters):
-   - First paragraph: Brief overview for kids (simple, exciting)
+2. DESCRIPTION (2 paragraphs separated by a blank line, ~{self.TARGET_DESCRIPTION_LENGTH} characters):
+   - First paragraph: Brief overview for kids (simple, exciting, mention the topic)
    - Second paragraph: Educational value for parents (what kids will learn)
-   - Include relevant keywords naturally
+   - IMPORTANT: Include the main topic keywords at least 3 times naturally across both paragraphs
+   - Separate the two paragraphs with \n\n (blank line)
    - NO call-to-action text (no "subscribe", "like", "comment", etc.)
    - Friendly, informative tone
    - Do NOT include hashtags in description (they will be added separately)
