@@ -34,20 +34,20 @@ class KidsVoiceoverGenerator:
     ELEVENLABS_API_URL = "https://api.elevenlabs.io/v1/text-to-speech"
 
     # Voice IDs (ElevenLabs voices suitable for kids content)
-    # Rachel: Calm, clear, warm female voice
-    DEFAULT_VOICE_ID = "21m00Tcm4TlvDq8ikWAM"
+    # Bella: Soft, gentle, warm female voice (MORE NATURAL)
+    DEFAULT_VOICE_ID = "EXAVITQu4vr4xnSDxMaL"
 
     # Alternative kid-friendly voices:
-    # Bella: Soft, gentle female voice
-    BELLA_VOICE_ID = "EXAVITQu4vr4xnSDxMaL"
+    # Rachel: Calm, clear, warm female voice (more formal)
+    RACHEL_VOICE_ID = "21m00Tcm4TlvDq8ikWAM"
     # Elli: Young, lively female voice
     ELLI_VOICE_ID = "MF3mGyEYCl7XYWbV9V6O"
 
-    # Voice settings optimized for kids content
-    DEFAULT_STABILITY = 0.75      # Higher = more consistent
-    DEFAULT_SIMILARITY = 0.75     # How close to original voice
-    DEFAULT_STYLE = 0.0           # 0 = more natural, 1 = more expressive
-    DEFAULT_SPEED = 0.85          # Slightly slower for clarity (0.25-4.0)
+    # Voice settings optimized for NATURAL, HUMAN-LIKE speech
+    DEFAULT_STABILITY = 0.35      # Lower = more variation = more human (0.3-0.5 recommended)
+    DEFAULT_SIMILARITY = 0.80     # How close to original voice
+    DEFAULT_STYLE = 0.40          # Higher = more expressive = more human (0.3-0.6 recommended)
+    DEFAULT_SPEED = 0.90          # Natural speaking speed (0.85-1.0 for kids)
 
     # API settings
     MAX_RETRIES = 3
@@ -149,12 +149,18 @@ class KidsVoiceoverGenerator:
             try:
                 self.logger.debug(f"Using ElevenLabs SDK (attempt {attempt}/{self.MAX_RETRIES})")
 
-                # Use official ElevenLabs SDK
+                # Use official ElevenLabs SDK with HUMAN-LIKE voice settings
                 audio_generator = self.client.text_to_speech.convert(
                     text=text,
                     voice_id=self.voice_id,
                     model_id="eleven_multilingual_v2",
-                    output_format="mp3_44100_128"
+                    output_format="mp3_44100_128",
+                    voice_settings={
+                        "stability": self.DEFAULT_STABILITY,     # Lower for natural variation
+                        "similarity_boost": self.DEFAULT_SIMILARITY,
+                        "style": self.DEFAULT_STYLE,            # Higher for expressiveness
+                        "use_speaker_boost": True               # Enhanced clarity
+                    }
                 )
 
                 # Write audio to file
