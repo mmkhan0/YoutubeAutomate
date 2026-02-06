@@ -1,6 +1,6 @@
 name: Pylint
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   build:
@@ -20,4 +20,14 @@ jobs:
         pip install pylint
     - name: Analysing the code with pylint
       run: |
-        pylint $(git ls-files '*.py')
+        echo "Running pylint with custom configuration..."
+        pylint $(git ls-files '*.py') --fail-under=6.0 --rcfile=.pylintrc
+    - name: Generate detailed pylint report
+      if: always()
+      run: |
+        echo "=== Generating detailed pylint report ===" 
+        pylint $(git ls-files '*.py') --output-format=text --rcfile=.pylintrc > pylint-report.txt || true
+        if [ -f pylint-report.txt ]; then
+          tail -20 pylint-report.txt
+        fi
+      continue-on-error: true

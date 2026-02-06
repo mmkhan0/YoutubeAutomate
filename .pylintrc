@@ -1,0 +1,90 @@
+[MASTER]
+# Use multiple processes to speed up Pylint
+jobs=4
+
+# Pickle collected data for later comparisons
+persistent=yes
+
+# Allow loading of arbitrary C extensions
+unsafe-load-any-extension=no
+
+[MESSAGES CONTROL]
+# Disable specific warnings that are too strict for this project
+disable=
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    too-few-public-methods,
+    too-many-arguments,
+    too-many-instance-attributes,
+    too-many-locals,
+    too-many-branches,
+    too-many-statements,
+    too-many-positional-arguments,
+    line-too-long,
+    invalid-name,
+    fixme,
+    broad-exception-caught,
+    import-outside-toplevel,
+    consider-using-f-string,
+    duplicate-code,
+    logging-fstring-interpolation,
+    f-string-without-interpolation,
+    no-else-return,
+    no-member,
+    pointless-string-statement,
+    redefined-outer-name,
+    unused-argument,
+    attribute-defined-outside-init
+
+[FORMAT]
+# Maximum number of characters on a single line
+max-line-length=120
+
+# Maximum number of lines in a module
+max-module-lines=1500
+
+[BASIC]
+# Good variable names which should always be accepted
+good-names=i,j,k,ex,Run,_,id,fd,fp
+
+[DESIGN]
+# Maximum number of arguments for function / method
+max-args=10
+
+# Maximum number of attributes for a class
+max-attributes=15
+
+# Maximum number of local variables
+max-locals=20
+
+# Maximum number of branch for function / method body
+max-branches=20
+
+# Maximum number of statements in function / method body
+max-statements=75
+
+[VARIABLES]
+# Allow unused variables when underscore-prefixed
+dummy-variables-rgx=_.*
+
+[IMPORTS]
+# Allow wildcard imports
+allow-wildcard-with-all=yes
+
+[LOGGING]
+# Logging modules to check
+logging-modules=logging
+
+[SIMILARITIES]
+# Minimum lines number of a similarity
+min-similarity-lines=10
+
+# Ignore imports when computing similarities
+ignore-imports=yes
+
+# Ignore docstrings when computing similarities
+ignore-docstrings=yes
+
+# Ignore comments when computing similarities
+ignore-comments=yes
