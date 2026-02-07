@@ -37,6 +37,9 @@ load_dotenv()
 # Add src directory to path
 sys.path.insert(0, str(Path(__file__).parent / 'src'))
 
+# Import configuration
+import config
+
 # Import all modules
 from src.kids_topic_selector import KidsTopicSelector
 from src.early_learning_selector import EarlyLearningTopicSelector
@@ -1483,8 +1486,8 @@ def main():
         '--language',
         type=str,
         choices=['en', 'hi', 'es', 'fr', 'de', 'pt', 'ar', 'ja', 'ko', 'zh'],
-        default=config.DEFAULT_LANGUAGE,
-        help=f'Video language (default: {config.DEFAULT_LANGUAGE} from .env): en (English), hi (Hindi), es (Spanish), fr (French), de (German), pt (Portuguese), ar (Arabic), ja (Japanese), ko (Korean), zh (Chinese)'
+        default=os.getenv('DEFAULT_LANGUAGE', 'en'),
+        help=f'Video language (default from .env: {os.getenv("DEFAULT_LANGUAGE", "en")}): en (English), hi (Hindi), es (Spanish), fr (French), de (German), pt (Portuguese), ar (Arabic), ja (Japanese), ko (Korean), zh (Chinese)'
     )
 
     args = parser.parse_args()
