@@ -253,7 +253,8 @@ class KidsScriptGenerator:
                         "You never use complex words, violence, fear, or copyrighted characters. "
                         # CREATE Formula: Extras
                         "EXTRAS: Every script you write scores 95%+ on readability for ages 4-8, "
-                        "maintains attention with questions and exclamations every 3-4 sentences, "
+                        "sounds like a real parent/teacher talking naturally (NOT robotic), "
+                        "uses varied vocabulary without repeating enthusiastic words like 'wow' or 'amazing', "
                         "and naturally includes pauses via punctuation for voiceover timing."
                     )
                 },
@@ -319,17 +320,19 @@ TOPIC: {topic}{language_instruction}
 Video specs: {minutes} minutes ({duration} seconds), ~{structure['total_words']} words total.
 
 [E] EXAMPLES:
-Here is the quality and style to follow:
+Here is the quality and style to follow (sound NATURAL like real human speech):
 - Hook: "Hey friends! Have you ever looked up at the sky and wondered... why is it blue?"
 - Teaching: "The sky looks blue because of tiny bits of light. Cool, right?"
-- Engagement: "Can you guess what happens next? That's right!"
-- Outro: "Wow, we learned so much today! You are so smart. See you next time!"
+- Natural Questions: "What do you think happens next?" or "Can you see it?"
+- Outro: "Great job learning today! You did so well. I'll see you again next time!"
 
 [A] ADJUSTMENTS:
 - Sentences: 5-10 words each, grade 1-2 reading level
-- Tone: Warm, friendly, calm but enthusiastic (like a kind teacher)
-- Engagement: Add "Wow!" "Amazing!" "Did you know?" "Let's find out!" every 3-4 sentences
+- Tone: Warm, friendly, conversational (like a real parent talking to their child)
+- Natural Speech: Sound like REAL human conversation - vary your words, don't repeat "wow", "amazing", "wonderful" etc.
+- Engagement: Use natural questions like "What do you think?" "Can you see it?" "Let me show you!"
 - Pauses: Use periods and commas naturally for voiceover breathing
+- AVOID AI Clichés: Don't overuse "awesome", "incredible", "fantastic" - sound like a real person
 - NEVER use: complex vocabulary, scary topics, copyrighted characters, brand names
 - Structure:
   * INTRO ({structure['intro_duration']}s): Exciting hook + introduce topic + build curiosity

@@ -282,13 +282,13 @@ VIDEO TYPE: Educational, family-friendly
 
 [E] EXAMPLES:
 Title example: "Why Do Leaves Change Colors? | Science for Kids"
-Description example: "Have you ever wondered why leaves turn red and orange in fall? Join us on a colorful adventure to discover the amazing science behind changing leaves!\n\nThis educational video teaches children about photosynthesis, chlorophyll, and seasonal changes through simple explanations and vibrant visuals. Perfect for preschool and kindergarten learners curious about nature."
+Description example: "Have you ever wondered why leaves turn red and orange in fall? Join us to discover the science behind changing leaves!\n\nThis educational video teaches children about photosynthesis, chlorophyll, and seasonal changes through simple explanations and vibrant visuals. Perfect for preschool and kindergarten learners curious about nature."
 Tags example: ["why leaves change color", "science for kids", "fall leaves", "photosynthesis for kids", "nature education", "preschool science", "kindergarten learning"]
 Hashtags example: ["KidsScience", "NatureForKids", "EducationalVideos", "PreschoolLearning", "ScienceExplained"]
 
 [A] ADJUSTMENTS:
-- TITLE ({self.MIN_TITLE_LENGTH}-{self.MAX_TITLE_LENGTH} chars): Include main keyword for SEO, clear and descriptive, NO emojis, NO clickbait, appeal to kids AND parents
-- DESCRIPTION (2 paragraphs separated by \n\n, ~{self.TARGET_DESCRIPTION_LENGTH} chars): Paragraph 1 = exciting overview for kids mentioning topic, Paragraph 2 = educational value for parents. Include topic keywords at least 3 times naturally. NO call-to-action (no subscribe/like/comment). NO hashtags in description.
+- TITLE ({self.MIN_TITLE_LENGTH}-{self.MAX_TITLE_LENGTH} chars): Include main keyword for SEO, clear and descriptive, NO emojis, NO clickbait, sound natural not AI-generated (avoid overusing "amazing", "incredible", etc.)
+- DESCRIPTION (2 paragraphs separated by \n\n, ~{self.TARGET_DESCRIPTION_LENGTH} chars): Paragraph 1 = engaging overview for kids mentioning topic (use natural conversational language), Paragraph 2 = educational value for parents. Include topic keywords at least 3 times naturally. NO call-to-action (no subscribe/like/comment). NO hashtags in description. Sound human, not robotic.
 - TAGS ({self.MIN_TAGS}-{self.MAX_TAGS} tags, max {self.MAX_TAG_LENGTH} chars each): Mix broad + specific, include keyword variations, age group tags, category tags, long-tail keywords
 - HASHTAGS ({self.MIN_HASHTAGS}-{self.MAX_HASHTAGS}): camelCase, no spaces, mix trending + category + age-appropriate + general reach. First 3 are most important (appear above title)
 
