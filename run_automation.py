@@ -926,7 +926,8 @@ class YouTubeAutomationOrchestrator:
             generator = KidsVoiceoverGenerator(
                 api_key=self.config['elevenlabs_api_key'],
                 output_dir=str(audio_dir),
-                speed=0.85
+                speed=0.85,
+                language=self.language
             )
 
             narration = self.session_data['script'].full_narration

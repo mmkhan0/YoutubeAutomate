@@ -63,13 +63,28 @@ class KidsVoiceoverGenerator:
 
     # Text chunking (ElevenLabs has character limits)
     MAX_CHARS_PER_REQUEST = 5000
+    
+    # Multilingual natural fillers and praise for human-like speech
+    LANGUAGE_FILLERS = {
+        'en': {'fillers': ['Okay', 'Alright', 'Now', 'So'], 'praise': ['Good', 'Great', 'Nice', 'Well done']},
+        'hi': {'fillers': ['अच्छा', 'ठीक है', 'अब', 'तो'], 'praise': ['बहुत अच्छा', 'शाबाश', 'वाह', 'बढ़िया']},
+        'es': {'fillers': ['Bueno', 'Vale', 'Ahora', 'Entonces'], 'praise': ['Bien', 'Genial', 'Excelente', 'Muy bien']},
+        'fr': {'fillers': ['Bon', "D'accord", 'Maintenant', 'Alors'], 'praise': ['Bien', 'Génial', 'Excellent', 'Très bien']},
+        'de': {'fillers': ['Gut', 'Also', 'Jetzt', 'So'], 'praise': ['Gut', 'Prima', 'Toll', 'Sehr gut']},
+        'pt': {'fillers': ['Bom', 'Certo', 'Agora', 'Então'], 'praise': ['Bom', 'Ótimo', 'Excelente', 'Muito bem']},
+        'ar': {'fillers': ['حسناً', 'طيب', 'الآن', 'إذاً'], 'praise': ['جيد', 'رائع', 'ممتاز', 'أحسنت']},
+        'ja': {'fillers': ['さあ', 'では', '今', 'それで'], 'praise': ['いいね', 'すごい', 'よくできました', '素晴らしい']},
+        'ko': {'fillers': ['좋아', '그래', '이제', '자'], 'praise': ['잘했어', '대단해', '훌륭해', '아주 좋아']},
+        'zh': {'fillers': ['好', '那么', '现在', '所以'], 'praise': ['很好', '太棒了', '真棒', '非常好']}
+    }
 
     def __init__(
         self,
         api_key: str,
         voice_id: Optional[str] = None,
         output_dir: Optional[str] = None,
-        speed: float = DEFAULT_SPEED
+        speed: float = DEFAULT_SPEED,
+        language: str = 'en'
     ):
         """
         Initialize the Kids Voiceover Generator.
@@ -79,10 +94,12 @@ class KidsVoiceoverGenerator:
             voice_id: Voice ID to use (default: Rachel)
             output_dir: Directory to save audio files (default: output/)
             speed: Speaking speed multiplier (default: 0.85 for slower)
+            language: Language code for fillers/praise (default: 'en')
         """
         self.api_key = api_key
         self.voice_id = voice_id or self.DEFAULT_VOICE_ID
         self.speed = speed
+        self.language = language
         self.logger = logging.getLogger(__name__)
 
         # Initialize ElevenLabs client with official SDK
@@ -381,8 +398,8 @@ class KidsVoiceoverGenerator:
         Add human-like teacher elements to plain text (for any TTS engine).
         
         Adds:
-        - Natural fillers (Okay, Alright, Now, So)
-        - Gentle praise (Good, Great, Nice, Well done)
+        - Natural fillers (language-specific: Okay/अच्छा/Bueno/etc.)
+        - Gentle praise (language-specific: Good/बहुत अच्छा/Bien/etc.)
         - More natural flow
         
         Args:
@@ -393,6 +410,11 @@ class KidsVoiceoverGenerator:
         """
         import re
         import random
+        
+        # Get language-specific fillers and praise
+        lang_data = self.LANGUAGE_FILLERS.get(self.language, self.LANGUAGE_FILLERS['en'])
+        fillers = lang_data['fillers']
+        praise = lang_data['praise']
         
         # Split into sentences
         sentences = text.split('.')
@@ -405,12 +427,10 @@ class KidsVoiceoverGenerator:
             
             # Add natural filler before some sentences (not first)
             if i > 0 and random.random() < 0.12:  # 12% chance
-                fillers = ['Okay', 'Alright', 'Now', 'So']
                 sentence = f'{random.choice(fillers)}, {sentence}'
             
             # Add gentle praise occasionally
             if i > 0 and random.random() < 0.08:  # 8% chance
-                praise = ['Good', 'Great', 'Nice', 'Well done']
                 sentence = f'{random.choice(praise)}! {sentence}'
             
             enhanced_sentences.append(sentence)
