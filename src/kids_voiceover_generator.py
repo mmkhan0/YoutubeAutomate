@@ -47,8 +47,8 @@ class KidsVoiceoverGenerator:
 
     # Edge TTS voices (FREE, unlimited) - Used as fallback when ElevenLabs quota exceeded
     EDGE_VOICE_FEMALE_CHILD = "en-US-AnaNeural"  # Young, friendly female
-    EDGE_VOICE_FEMALE_FRIENDLY = "en-US-JennyNeural"  # Warm, natural female
-    EDGE_VOICE_FEMALE_STORY = "en-GB-SoniaNeural"  # British storytelling voice
+    EDGE_VOICE_FEMALE_FRIENDLY = "en-US-AriaNeural"  # MOST NATURAL: Warm, expressive, human-like
+    EDGE_VOICE_FEMALE_STORY = "en-US-SaraNeural"  # Natural storytelling voice
 
     # Voice settings optimized for NATURAL, HUMAN-LIKE speech
     DEFAULT_STABILITY = 0.35      # Lower = more variation = more human (0.3-0.5 recommended)
@@ -373,6 +373,81 @@ class KidsVoiceoverGenerator:
 
         raise FileNotFoundError("FFmpeg not found. Install FFmpeg or set FFMPEG_PATH in config.")
 
+    def _transform_to_human_narration(self, text: str) -> str:
+        """
+        Transform script text into HUMAN-LIKE, warm teacher narration with SSML.
+        
+        Adds natural elements:
+        - Pauses after sentences and questions
+        - Gentle fillers (Hmm, Okay, Wow)  
+        - Warm encouragement
+        - Emphasis on key learning words
+        - Slower pacing for young children
+        
+        Args:
+            text: Plain script text
+            
+        Returns:
+            str: SSML-enhanced human-like narration
+        """
+        import re
+        import random
+        
+        # Step 1: Break long sentences into shorter chunks
+        # Replace periods followed by space with period + break
+        text = re.sub(r'\.\s+', '.<break time="500ms"/> ', text)
+        
+        # Step 2: Add pauses after questions (longer breaks)
+        text = re.sub(r'\?\s+', '?<break time="800ms"/> ', text)
+        
+        # Step 3: Add pauses after exclamations
+        text = re.sub(r'!\s+', '!<break time="600ms"/> ', text)
+        
+        # Step 4: Add natural fillers at strategic points
+        # Add "Okay" or "Alright" occasionally between sentences
+        sentences = text.split('.')
+        enhanced_sentences = []
+        
+        for i, sentence in enumerate(sentences):
+            sentence = sentence.strip()
+            if not sentence:
+                continue
+                
+            # Add filler before some sentences (not first, not too often)
+            if i > 0 and random.random() < 0.15:  # 15% chance
+                fillers = ['Okay', 'Alright', 'Now', 'So']
+                filler = random.choice(fillers)
+                sentence = f'{filler},<break time="300ms"/> {sentence}'
+            
+            # Add gentle praise occasionally
+            if i > 0 and random.random() < 0.10:  # 10% chance
+                praise = ['Good', 'Great', 'Nice']
+                sentence = f'{random.choice(praise)}!<break time="400ms"/> {sentence}'
+            
+            enhanced_sentences.append(sentence)
+        
+        text = '. '.join(enhanced_sentences)
+        
+        # Step 5: Emphasize numbers and learning keywords
+        # Emphasize cardinal numbers
+        text = re.sub(r'\b(one|two|three|four|five|six|seven|eight|nine|ten)\b', 
+                     r'<emphasis level="moderate">\1</emphasis>', text, flags=re.I)
+        
+        # Emphasize colors
+        colors = ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'brown', 'black', 'white']
+        for color in colors:
+            text = re.sub(rf'\b{color}\b', 
+                         f'<emphasis level="moderate">{color}</emphasis>', text, flags=re.I)
+        
+        # Step 6: Add natural breathing pauses at commas
+        text = re.sub(r',\s*', ',<break time="300ms"/> ', text)
+        
+        # Step 7: Slow down the entire narration for young children
+        # Wrap in prosody tag for overall pacing
+        text = f'<prosody rate="-10%" pitch="+0%">{text}</prosody>'
+        
+        return text
+
     def _generate_edge_tts(self, text: str, output_path: Path) -> str:
         """
         Generate voiceover using FREE Microsoft Edge TTS (unlimited, no API key).
@@ -389,8 +464,12 @@ class KidsVoiceoverGenerator:
         try:
             self.logger.info("🆓 Using FREE Edge TTS (Microsoft)")
             
-            # Run async Edge TTS generation
-            asyncio.run(self._edge_tts_async(text, output_path))
+            # Transform text to human-like narration with SSML
+            human_text = self._transform_to_human_narration(text)
+            self.logger.info("🎙️  Applied human-like narration transformation (SSML)")
+            
+            # Run async Edge TTS generation with transformed text
+            asyncio.run(self._edge_tts_async(human_text, output_path))
             
             if output_path.exists():
                 file_size_mb = output_path.stat().st_size / (1024 * 1024)
@@ -405,11 +484,20 @@ class KidsVoiceoverGenerator:
     
     async def _edge_tts_async(self, text: str, output_path: Path):
         """Async helper for Edge TTS generation."""
-        # Use child-friendly voice
+        # Use MOST NATURAL voice (Aria is most human-like)
         voice = self.EDGE_VOICE_FEMALE_FRIENDLY
         
-        # Create Edge TTS communicate instance
-        communicate = edge_tts.Communicate(text, voice, rate="-5%", pitch="+5Hz")
+        # NATURAL SETTINGS for human-like speech:
+        # - Slower rate for kids content (easier to understand)
+        # - Slight pitch variation (more natural, less monotone)
+        # - Softer volume (less aggressive/robotic)
+        communicate = edge_tts.Communicate(
+            text, 
+            voice, 
+            rate="-15%",      # Slower, clearer for kids (was -5%)
+            pitch="+0Hz",     # Natural pitch, no artificial raising
+            volume="+0%"      # Normal volume
+        )
         
         # Generate and save audio
         await communicate.save(str(output_path))

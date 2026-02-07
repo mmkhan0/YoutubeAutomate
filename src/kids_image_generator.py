@@ -65,6 +65,35 @@ class KidsImageGenerator:
 
     # Download settings
     DOWNLOAD_TIMEOUT = 30
+    
+    # ART STYLE VARIATION - Each video gets random style for unique personality
+    ART_STYLES = [
+        {
+            'name': '3D Pixar',
+            'description': 'High-quality 3D Pixar-Disney cartoon, vibrant saturated colors, soft rounded shapes, big expressive eyes, smooth 3D rendering',
+            'weight': 30  # Most common (good for kids)
+        },
+        {
+            'name': '2D Flat',
+            'description': '2D flat colorful cartoon illustration, bold outlines, simple geometric shapes, bright flat colors, playful design',
+            'weight': 25
+        },
+        {
+            'name': 'Watercolor',
+            'description': 'Soft watercolor children\'s book illustration, gentle pastel colors, painted texture, storybook style, artistic brushstrokes',
+            'weight': 20
+        },
+        {
+            'name': 'Clay Style',
+            'description': 'Claymation style 3D cartoon, clay texture, stop-motion appearance, chunky rounded forms, matte finish',
+            'weight': 15
+        },
+        {
+            'name': 'Friendly Realistic',
+            'description': 'Friendly realistic cartoon with soft shading, semi-detailed textures, natural colors, warm lighting, approachable style',
+            'weight': 10
+        }
+    ]
 
     def __init__(
         self,
@@ -83,6 +112,15 @@ class KidsImageGenerator:
         self.client = OpenAI(api_key=api_key)
         self.seconds_per_image = seconds_per_image
         self.logger = logging.getLogger(__name__)
+        
+        # SELECT RANDOM ART STYLE per video for variety
+        import random
+        self.selected_style = random.choices(
+            self.ART_STYLES,
+            weights=[s['weight'] for s in self.ART_STYLES],
+            k=1
+        )[0]
+        self.logger.info(f"🎨 Art style for this video: {self.selected_style['name']}")
 
         # Set up output directory
         if output_dir is None:
@@ -339,11 +377,11 @@ class KidsImageGenerator:
             content = f"REQUEST: Illustrate this scene: {description}."
 
         # [E] EXAMPLES (style reference): Visual style guidelines
+        # USE SELECTED RANDOM STYLE for this video
         style_guide = (
-            "STYLE REFERENCE: High-quality 3D cartoon, vibrant saturated colors, "
-            "soft rounded shapes, big expressive eyes, friendly smiling characters, "
-            "soft lighting, gentle gradients, smooth textures. Cute proportions "
-            "with large heads and small bodies. Clean composition, clear focal point. "
+            f"STYLE REFERENCE: {self.selected_style['description']}. "
+            "Friendly smiling characters, soft lighting, clean composition, clear focal point. "
+            "Cute proportions suitable for young children. "
         )
 
         # [A] ADJUSTMENTS: Strict constraints

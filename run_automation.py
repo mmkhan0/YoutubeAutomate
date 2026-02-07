@@ -18,6 +18,7 @@ import os
 import logging
 import shutil
 import time
+import random
 import traceback
 import functools
 from pathlib import Path
@@ -1354,6 +1355,16 @@ class YouTubeAutomationOrchestrator:
 
             # Detect appropriate playlist
             playlist_id = self._detect_playlist()
+
+            # Humanized upload delay: Mimic human behavior by waiting 2-15 minutes
+            # Humans don't upload at exactly scheduled times
+            # DISABLED: Set to instant upload (comment out to re-enable delay)
+            # delay_seconds = random.randint(120, 900)  # 2-15 minutes
+            # delay_minutes = delay_seconds // 60
+            # delay_remainder = delay_seconds % 60
+            # self.logger.info(f"⏰ Humanized upload delay: Waiting {delay_minutes}min {delay_remainder}s before upload...")
+            # time.sleep(delay_seconds)
+            # self.logger.info("✓ Delay complete, proceeding with upload")
 
             result = uploader.upload_video(
                 video_path=self.session_data['video_path'],

@@ -158,5 +158,21 @@
     "age_group": "2-6 years",
     "language": "English",
     "timestamp": "2026-02-07T12:40:36.537674"
+  },
+  {
+    "topic": "Learning Emotions - Feeling Sad for Kids",
+    "category": "Emotions",
+    "category_key": "emotions",
+    "age_group": "2-6 years",
+    "language": "English",
+    "timestamp": "2026-02-07T13:22:44.808452"
+  },
+  {
+    "topic": "Farm Animals - Meet the Horse | Sounds and Fun",
+    "category": "Animals Sounds",
+    "category_key": "animals_sounds",
+    "age_group": "2-6 years",
+    "language": "English",
+    "timestamp": "2026-02-07T13:46:12.902448"
   }
 ]
