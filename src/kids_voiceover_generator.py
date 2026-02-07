@@ -123,6 +123,9 @@ class KidsVoiceoverGenerator:
 
         # Add natural pauses between sentences (human-like speech)
         text = self._add_natural_pauses(text)
+        
+        # Add human-like elements (fillers, praise, natural flow)
+        text = self._add_human_elements(text)
 
         self.logger.info(f"Generating voiceover ({len(text)} characters)")
 
@@ -372,6 +375,47 @@ class KidsVoiceoverGenerator:
             return system_ffmpeg
 
         raise FileNotFoundError("FFmpeg not found. Install FFmpeg or set FFMPEG_PATH in config.")
+    
+    def _add_human_elements(self, text: str) -> str:
+        """
+        Add human-like teacher elements to plain text (for any TTS engine).
+        
+        Adds:
+        - Natural fillers (Okay, Alright, Now, So)
+        - Gentle praise (Good, Great, Nice, Well done)
+        - More natural flow
+        
+        Args:
+            text: Plain script text
+            
+        Returns:
+            str: Enhanced text with human-like elements
+        """
+        import re
+        import random
+        
+        # Split into sentences
+        sentences = text.split('.')
+        enhanced_sentences = []
+        
+        for i, sentence in enumerate(sentences):
+            sentence = sentence.strip()
+            if not sentence:
+                continue
+            
+            # Add natural filler before some sentences (not first)
+            if i > 0 and random.random() < 0.12:  # 12% chance
+                fillers = ['Okay', 'Alright', 'Now', 'So']
+                sentence = f'{random.choice(fillers)}, {sentence}'
+            
+            # Add gentle praise occasionally
+            if i > 0 and random.random() < 0.08:  # 8% chance
+                praise = ['Good', 'Great', 'Nice', 'Well done']
+                sentence = f'{random.choice(praise)}! {sentence}'
+            
+            enhanced_sentences.append(sentence)
+        
+        return '. '.join(enhanced_sentences)
 
     def _transform_to_human_narration(self, text: str) -> str:
         """
