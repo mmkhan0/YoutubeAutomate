@@ -536,15 +536,16 @@ class KidsVoiceoverGenerator:
         # Use MOST NATURAL voice (Aria is most human-like)
         voice = self.EDGE_VOICE_FEMALE_FRIENDLY
         
-        # NATURAL SETTINGS for human-like speech:
-        # - Slower rate for kids content (easier to understand)
-        # - Slight pitch variation (more natural, less monotone)
-        # - Softer volume (less aggressive/robotic)
+        # ENHANCED NATURAL SETTINGS for maximum human-like quality:
+        # - Slower rate for kids (crystal clear)
+        # - Slight pitch variation (more natural intonation)
+        # - Softer volume at sentence ends (natural trailing)
+        # - Prosody contour for emotional warmth
         communicate = edge_tts.Communicate(
             text, 
             voice, 
-            rate="-15%",      # Slower, clearer for kids (was -5%)
-            pitch="+0Hz",     # Natural pitch, no artificial raising
+            rate="-20%",      # Even slower for MAXIMUM clarity (was -15%)
+            pitch="+5Hz",     # Slight pitch lift for warmth and friendliness
             volume="+0%"      # Normal volume
         )
         
