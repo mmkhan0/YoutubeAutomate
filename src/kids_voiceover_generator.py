@@ -467,14 +467,14 @@ class KidsVoiceoverGenerator:
             if not sentence:
                 continue
             
-            # Add conversational break occasionally (every 7-9 sentences, less frequent)
-            if i > 0 and i % random.randint(7, 9) == 0 and random.random() < 0.25:  # 25% chance, less frequent
+            # Add conversational break very occasionally (every 10-12 sentences, rare)
+            if i > 0 and i % random.randint(10, 12) == 0 and random.random() < 0.20:  # 20% chance, very rare
                 sentence = f'{random.choice(breaks)}! {sentence}'
-            # Add natural filler before some sentences (not first) - reduced frequency
-            elif i > 0 and random.random() < 0.08:  # 8% chance (was 12%)
+            # Add natural filler very rarely - only at major transitions
+            elif i > 0 and random.random() < 0.03:  # 3% chance (was 8%)
                 sentence = f'{random.choice(fillers)}, {sentence}'
-            # Add gentle praise occasionally - reduced frequency
-            elif i > 0 and random.random() < 0.05:  # 5% chance (was 8%)
+            # Add gentle praise very rarely
+            elif i > 0 and random.random() < 0.02:  # 2% chance (was 5%)
                 sentence = f'{random.choice(praise)}! {sentence}'
             
             enhanced_sentences.append(sentence)
@@ -512,14 +512,14 @@ class KidsVoiceoverGenerator:
             if not sentence:
                 continue
             
-            # Add conversational break occasionally (every 7-9 sentences, less frequent)
-            if i > 0 and i % random.randint(7, 9) == 0 and random.random() < 0.25:
+            # Add conversational break very occasionally (every 10-12 sentences, rare)
+            if i > 0 and i % random.randint(10, 12) == 0 and random.random() < 0.20:
                 sentence = f'{random.choice(breaks)}! {sentence}'
-            # Add filler occasionally (not first sentence) - reduced frequency
-            elif i > 0 and random.random() < 0.08:
+            # Add filler very rarely - only at major transitions
+            elif i > 0 and random.random() < 0.03:
                 sentence = f'{random.choice(fillers)}, {sentence}'
-            # Add gentle praise occasionally - reduced frequency
-            elif i > 0 and random.random() < 0.05:
+            # Add gentle praise very rarely
+            elif i > 0 and random.random() < 0.02:
                 sentence = f'{random.choice(praise)}! {sentence}'
             
             enhanced_sentences.append(sentence)
