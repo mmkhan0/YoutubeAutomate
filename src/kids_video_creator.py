@@ -416,8 +416,12 @@ class KidsVideoCreator:
             # First image
             current = f"[v0]"
 
-            # Variety of transition effects for visual interest
-            transitions = ['fade', 'wipeleft', 'wiperight', 'slideleft', 'slideright', 'smoothleft', 'smoothright', 'circleopen', 'circleclose']
+            # Gentle transition effects for natural, organic feel
+            # Using only subtle transitions that don't distract  
+            smooth_transitions = ['fade', 'smoothleft', 'smoothright', 'fadeblack', 'fadewhite']
+            
+            # Import random for natural variation
+            import random
 
             # Calculate cumulative offsets for transitions
             cumulative_offset = 0.0
@@ -427,12 +431,9 @@ class KidsVideoCreator:
                 prev_duration = image_durations[i - 1]
                 fade_start = cumulative_offset + prev_duration - self.FADE_DURATION
 
-                # Select transition type (varied but mostly fade for simplicity)
-                # Use fade for most, special transitions occasionally
-                if i % 3 == 0 and i < len(images) - 1:  # Special transition every 3rd image
-                    transition_type = transitions[i % len(transitions)]
-                else:
-                    transition_type = 'fade'  # Default smooth fade
+                # RANDOM ORGANIC TRANSITIONS - feels human-edited, not automated
+                # Pick randomly from gentle transitions for each image change
+                transition_type = random.choice(smooth_transitions)
 
                 # Crossfade transition with selected effect
                 fade_filter = (

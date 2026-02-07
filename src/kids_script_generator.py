@@ -327,7 +327,8 @@ Here is the quality and style to follow (sound NATURAL like real human speech):
 - Outro: "Great job learning today! You did so well. I'll see you again next time!"
 
 [A] ADJUSTMENTS:
-- Sentences: 5-10 words each, grade 1-2 reading level
+- Sentences: Mix SHORT (3-5 words) and LONGER (8-15 words) for NATURAL RHYTHM - vary constantly!
+  Example: "Look at this! A giraffe has a super long neck. See how tall it is? It can reach the highest leaves."
 - Tone: Warm, friendly, conversational (like a real parent talking to their child)
 - Natural Speech: Sound like REAL human conversation - vary your words, don't repeat "wow", "amazing", "wonderful" etc.
 - Engagement: Use natural questions like "What do you think?" "Can you see it?" "Let me show you!"

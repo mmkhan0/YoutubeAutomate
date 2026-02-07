@@ -1010,11 +1010,16 @@ class YouTubeAutomationOrchestrator:
                         section_images = round((i + 1) * images_per_section) - images_assigned
                         section_images = max(1, section_images)  # At least 1 image per section
                     
-                    # Distribute section duration equally among its images
+                    # Distribute section duration with NATURAL VARIATION (±20%)
+                    # Makes timing feel organic, not robotic
+                    import random
                     dur_per_image = section_dur / section_images
                     
-                    for _ in range(section_images):
-                        image_durations.append(dur_per_image)
+                    for img_idx in range(section_images):
+                        # Add random variation (80%-120% of base duration)
+                        variation = random.uniform(0.8, 1.2)
+                        varied_duration = dur_per_image * variation
+                        image_durations.append(varied_duration)
                     
                     images_assigned += section_images
                     self.logger.info(
