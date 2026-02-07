@@ -185,6 +185,10 @@ YOUTUBE_CATEGORY_ID = "27"  # Education
 # False: Video is not made for kids
 YOUTUBE_MADE_FOR_KIDS = False
 
+# Default language for video narration and content
+# Supported: en, hi, es, fr, de, pt, ar, ja, ko, zh
+DEFAULT_LANGUAGE = os.getenv('DEFAULT_LANGUAGE', 'en')
+
 # Default tags to add to all videos
 YOUTUBE_DEFAULT_TAGS = [
     "educational",

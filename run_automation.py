@@ -1358,13 +1358,12 @@ class YouTubeAutomationOrchestrator:
 
             # Humanized upload delay: Mimic human behavior by waiting 2-15 minutes
             # Humans don't upload at exactly scheduled times
-            # DISABLED: Set to instant upload (comment out to re-enable delay)
-            # delay_seconds = random.randint(120, 900)  # 2-15 minutes
-            # delay_minutes = delay_seconds // 60
-            # delay_remainder = delay_seconds % 60
-            # self.logger.info(f"⏰ Humanized upload delay: Waiting {delay_minutes}min {delay_remainder}s before upload...")
-            # time.sleep(delay_seconds)
-            # self.logger.info("✓ Delay complete, proceeding with upload")
+            delay_seconds = random.randint(120, 900)  # 2-15 minutes
+            delay_minutes = delay_seconds // 60
+            delay_remainder = delay_seconds % 60
+            self.logger.info(f"⏰ Humanized upload delay: Waiting {delay_minutes}min {delay_remainder}s before upload...")
+            time.sleep(delay_seconds)
+            self.logger.info("✓ Delay complete, proceeding with upload")
 
             result = uploader.upload_video(
                 video_path=self.session_data['video_path'],
@@ -1483,8 +1482,8 @@ def main():
         '--language',
         type=str,
         choices=['en', 'hi', 'es', 'fr', 'de', 'pt', 'ar', 'ja', 'ko', 'zh'],
-        default='en',
-        help='Video language: en (English), hi (Hindi), es (Spanish), fr (French), de (German), pt (Portuguese), ar (Arabic), ja (Japanese), ko (Korean), zh (Chinese)'
+        default=config.DEFAULT_LANGUAGE,
+        help=f'Video language (default: {config.DEFAULT_LANGUAGE} from .env): en (English), hi (Hindi), es (Spanish), fr (French), de (German), pt (Portuguese), ar (Arabic), ja (Japanese), ko (Korean), zh (Chinese)'
     )
 
     args = parser.parse_args()
