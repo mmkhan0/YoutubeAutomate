@@ -143,6 +143,12 @@ class KidsScriptGenerator:
 
         if target_duration is None:
             target_duration = (self.min_duration + self.max_duration) // 2
+        
+        # Add NATURAL VARIATION to video length (±5-10 seconds)
+        # Makes videos feel human-edited, not perfectly timed by algorithm
+        import random
+        variation = random.randint(-10, 10)  # Random variation between -10 to +10 seconds
+        target_duration = target_duration + variation
 
         if target_duration < self.min_duration or target_duration > self.max_duration:
             raise ValueError(
@@ -321,7 +327,8 @@ Video specs: {minutes} minutes ({duration} seconds), ~{structure['total_words']}
 
 [E] EXAMPLES:
 Here is the quality and style to follow (sound NATURAL like real human speech):
-- Hook: "Hey friends! Have you ever looked up at the sky and wondered... why is it blue?"
+- Varied Openings: "Hi there!", "Hello!", "Hey everyone!", "Ready to learn?", "Let's discover something!"
+  (NEVER repeat same greeting - vary each video naturally!)
 - Teaching: "The sky looks blue because of tiny bits of light. Cool, right?"
 - Natural Questions: "What do you think happens next?" or "Can you see it?"
 - Outro: "Great job learning today! You did so well. I'll see you again next time!"

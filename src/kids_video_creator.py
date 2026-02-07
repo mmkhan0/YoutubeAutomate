@@ -46,8 +46,12 @@ class KidsVideoCreator:
 
     # Transition settings
     FADE_DURATION = 0.8  # Increased from 0.5 for smoother fades
-    ZOOM_FACTOR = 1.15   # Increased from 1.1 for more dynamic motion
-    ZOOM_SPEED = 0.0003  # Smooth zoom increment per frame
+    
+    # Dynamic Ken Burns effect (varies per image for natural feel)
+    ZOOM_MIN = 1.08      # Minimum zoom
+    ZOOM_MAX = 1.22      # Maximum zoom  
+    ZOOM_SPEED_MIN = 0.0001  # Slowest zoom
+    ZOOM_SPEED_MAX = 0.0005  # Fastest zoom
 
     # Audio mixing
     MUSIC_VOLUME = 0.15  # Background music at 15% volume
@@ -401,10 +405,22 @@ class KidsVideoCreator:
 
             # Add slight zoom effect using zoompan filter
             # CRITICAL: d= is number of FRAMES, not seconds!
-            if self.ZOOM_FACTOR > 1.0:
+            # DYNAMIC: Each image gets random zoom for natural variety
+            import random
+            zoom_factor = random.uniform(self.ZOOM_MIN, self.ZOOM_MAX)
+            zoom_speed = random.uniform(self.ZOOM_SPEED_MIN, self.ZOOM_SPEED_MAX)
+            
+            # 50% chance to zoom in or out for variety
+            zoom_direction = random.choice(['in', 'out'])
+            if zoom_direction == 'out':
+                zoom_expr = f"'if(lte(zoom,1.0),{zoom_factor},max(1.0,zoom-{zoom_speed}))'"
+            else:
+                zoom_expr = f"'min(zoom+{zoom_speed},{zoom_factor})'"
+            
+            if zoom_factor > 1.0:
                 frames_per_image = int(duration * self.OUTPUT_FPS)
                 filter_str += (
-                    f",zoompan=z='min(zoom+0.0002,{self.ZOOM_FACTOR})':"
+                    f",zoompan=z={zoom_expr}:"
                     f"d={frames_per_image}:s={self.OUTPUT_WIDTH}x{self.OUTPUT_HEIGHT}"
                 )
 
