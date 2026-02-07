@@ -66,16 +66,56 @@ class KidsVoiceoverGenerator:
     
     # Multilingual natural fillers and praise for human-like speech
     LANGUAGE_FILLERS = {
-        'en': {'fillers': ['Okay', 'Alright', 'Now', 'So'], 'praise': ['Good', 'Great', 'Nice', 'Well done']},
-        'hi': {'fillers': ['अच्छा', 'ठीक है', 'अब', 'तो'], 'praise': ['बहुत अच्छा', 'शाबाश', 'वाह', 'बढ़िया']},
-        'es': {'fillers': ['Bueno', 'Vale', 'Ahora', 'Entonces'], 'praise': ['Bien', 'Genial', 'Excelente', 'Muy bien']},
-        'fr': {'fillers': ['Bon', "D'accord", 'Maintenant', 'Alors'], 'praise': ['Bien', 'Génial', 'Excellent', 'Très bien']},
-        'de': {'fillers': ['Gut', 'Also', 'Jetzt', 'So'], 'praise': ['Gut', 'Prima', 'Toll', 'Sehr gut']},
-        'pt': {'fillers': ['Bom', 'Certo', 'Agora', 'Então'], 'praise': ['Bom', 'Ótimo', 'Excelente', 'Muito bem']},
-        'ar': {'fillers': ['حسناً', 'طيب', 'الآن', 'إذاً'], 'praise': ['جيد', 'رائع', 'ممتاز', 'أحسنت']},
-        'ja': {'fillers': ['さあ', 'では', '今', 'それで'], 'praise': ['いいね', 'すごい', 'よくできました', '素晴らしい']},
-        'ko': {'fillers': ['좋아', '그래', '이제', '자'], 'praise': ['잘했어', '대단해', '훌륭해', '아주 좋아']},
-        'zh': {'fillers': ['好', '那么', '现在', '所以'], 'praise': ['很好', '太棒了', '真棒', '非常好']}
+        'en': {
+            'fillers': ['Okay', 'Alright', 'Now', 'So'], 
+            'praise': ['Good', 'Great', 'Nice', 'Well done'],
+            'breaks': ['Hey guys', 'Break time', "Let's pause", 'Quick break', 'Time to pause', 'Hold on']
+        },
+        'hi': {
+            'fillers': ['अच्छा', 'ठीक है', 'अब', 'तो'], 
+            'praise': ['बहुत अच्छा', 'शाबाश', 'वाह', 'बढ़िया'],
+            'breaks': ['हे दोस्तों', 'ब्रेक टाइम', 'थोड़ा रुकें', 'एक ब्रेक', 'रुकिए', 'ठहरिए']
+        },
+        'es': {
+            'fillers': ['Bueno', 'Vale', 'Ahora', 'Entonces'], 
+            'praise': ['Bien', 'Genial', 'Excelente', 'Muy bien'],
+            'breaks': ['Hola chicos', 'Tiempo de pausa', 'Descansemos', 'Pausa rápida', 'Un momento', 'Esperen']
+        },
+        'fr': {
+            'fillers': ['Bon', "D'accord", 'Maintenant', 'Alors'], 
+            'praise': ['Bien', 'Génial', 'Excellent', 'Très bien'],
+            'breaks': ['Salut les amis', 'Temps de pause', 'Faisons une pause', 'Petite pause', 'Un instant', 'Attendez']
+        },
+        'de': {
+            'fillers': ['Gut', 'Also', 'Jetzt', 'So'], 
+            'praise': ['Gut', 'Prima', 'Toll', 'Sehr gut'],
+            'breaks': ['Hey Leute', 'Pausenzeit', 'Lass uns pausieren', 'Kurze Pause', 'Moment mal', 'Wartet']
+        },
+        'pt': {
+            'fillers': ['Bom', 'Certo', 'Agora', 'Então'], 
+            'praise': ['Bom', 'Ótimo', 'Excelente', 'Muito bem'],
+            'breaks': ['Ei pessoal', 'Hora do intervalo', 'Vamos pausar', 'Pausa rápida', 'Um momento', 'Esperem']
+        },
+        'ar': {
+            'fillers': ['حسناً', 'طيب', 'الآن', 'إذاً'], 
+            'praise': ['جيد', 'رائع', 'ممتاز', 'أحسنت'],
+            'breaks': ['يا أصدقاء', 'وقت استراحة', 'دعونا نتوقف', 'استراحة سريعة', 'لحظة', 'انتظروا']
+        },
+        'ja': {
+            'fillers': ['さあ', 'では', '今', 'それで'], 
+            'praise': ['いいね', 'すごい', 'よくできました', '素晴らしい'],
+            'breaks': ['みんな', '休憩タイム', 'ちょっと休憩', '少しお休み', 'ちょっと待って', '待ってね']
+        },
+        'ko': {
+            'fillers': ['좋아', '그래', '이제', '자'], 
+            'praise': ['잘했어', '대단해', '훌륭해', '아주 좋아'],
+            'breaks': ['여러분', '쉬는 시간', '잠깐 쉬어요', '짧은 휴식', '잠깐만', '기다려봐']
+        },
+        'zh': {
+            'fillers': ['好', '那么', '现在', '所以'], 
+            'praise': ['很好', '太棒了', '真棒', '非常好'],
+            'breaks': ['嘿大家', '休息时间', '我们暂停一下', '快速休息', '等一下', '稍等']
+        }
     }
 
     def __init__(
@@ -400,6 +440,7 @@ class KidsVoiceoverGenerator:
         Adds:
         - Natural fillers (language-specific: Okay/अच्छा/Bueno/etc.)
         - Gentle praise (language-specific: Good/बहुत अच्छा/Bien/etc.)
+        - Conversational breaks (Hey guys/Break time/etc.)
         - More natural flow
         
         Args:
@@ -411,10 +452,11 @@ class KidsVoiceoverGenerator:
         import re
         import random
         
-        # Get language-specific fillers and praise
+        # Get language-specific fillers, praise, and breaks
         lang_data = self.LANGUAGE_FILLERS.get(self.language, self.LANGUAGE_FILLERS['en'])
         fillers = lang_data['fillers']
         praise = lang_data['praise']
+        breaks = lang_data.get('breaks', ['Hey guys', 'Break time'])
         
         # Split into sentences
         sentences = text.split('.')
@@ -425,12 +467,14 @@ class KidsVoiceoverGenerator:
             if not sentence:
                 continue
             
+            # Add conversational break every 4-6 sentences
+            if i > 0 and i % random.randint(4, 6) == 0 and random.random() < 0.35:  # 35% chance
+                sentence = f'{random.choice(breaks)}! {sentence}'
             # Add natural filler before some sentences (not first)
-            if i > 0 and random.random() < 0.12:  # 12% chance
+            elif i > 0 and random.random() < 0.12:  # 12% chance
                 sentence = f'{random.choice(fillers)}, {sentence}'
-            
             # Add gentle praise occasionally
-            if i > 0 and random.random() < 0.08:  # 8% chance
+            elif i > 0 and random.random() < 0.08:  # 8% chance
                 sentence = f'{random.choice(praise)}! {sentence}'
             
             enhanced_sentences.append(sentence)
@@ -439,44 +483,44 @@ class KidsVoiceoverGenerator:
 
     def _transform_to_human_narration(self, text: str) -> str:
         """
-        Transform script text into HUMAN-LIKE, warm teacher narration with SSML.
+        Transform script text into HUMAN-LIKE, warm teacher narration.
+        
+        Edge TTS naturally pauses at punctuation, so we just add human elements
+        without SSML tags (which would be spoken aloud).
         
         Args:
             text: Plain script text
             
         Returns:
-            str: SSML-enhanced human-like narration (plain text + breaks only)
+            str: Human-like narration with conversational phrases
         """
         import re
         import random
         
-        # Add pauses after sentences
-        text = re.sub(r'\.\s+', '.<break time="500ms"/> ', text)
-        
-        # Add longer pauses after questions
-        text = re.sub(r'\?\s+', '?<break time="800ms"/> ', text)
-        
-        # Add pauses after exclamations
-        text = re.sub(r'!\s+', '!<break time="600ms"/> ', text)
-        
-        # Add natural fillers and praise between sentences
+        # Add natural fillers, praise, and conversational breaks between sentences
         sentences = text.split('.')
         enhanced_sentences = []
+        
+        # Get language-specific phrases
+        lang_data = self.LANGUAGE_FILLERS.get(self.language, self.LANGUAGE_FILLERS['en'])
+        fillers = lang_data['fillers']
+        praise = lang_data['praise']
+        breaks = lang_data.get('breaks', ['Hey guys', 'Break time'])
         
         for i, sentence in enumerate(sentences):
             sentence = sentence.strip()
             if not sentence:
                 continue
             
+            # Add conversational break every 4-6 sentences (Hey guys! Break time!)
+            if i > 0 and i % random.randint(4, 6) == 0 and random.random() < 0.35:
+                sentence = f'{random.choice(breaks)}! {sentence}'
             # Add filler occasionally (not first sentence)
-            if i > 0 and random.random() < 0.12:
-                fillers = ['Okay', 'Alright', 'Now', 'So']
-                sentence = f'{random.choice(fillers)},<break time="300ms"/> {sentence}'
-            
+            elif i > 0 and random.random() < 0.12:
+                sentence = f'{random.choice(fillers)}... {sentence}'
             # Add gentle praise occasionally
-            if i > 0 and random.random() < 0.08:
-                praise = ['Good', 'Great', 'Nice', 'Well done']
-                sentence = f'{random.choice(praise)}!<break time="400ms"/> {sentence}'
+            elif i > 0 and random.random() < 0.08:
+                sentence = f'{random.choice(praise)}! {sentence}'
             
             enhanced_sentences.append(sentence)
         
@@ -491,9 +535,6 @@ class KidsVoiceoverGenerator:
         }
         for num, stretched in numbers.items():
             text = re.sub(rf'\b{num}\b', stretched, text, flags=re.I)
-        
-        # Add breathing pauses at commas
-        text = re.sub(r',\s*', ',<break time="300ms"/> ', text)
         
         return text
 
@@ -513,9 +554,9 @@ class KidsVoiceoverGenerator:
         try:
             self.logger.info("🆓 Using FREE Edge TTS (Microsoft)")
             
-            # Transform text to human-like narration with SSML
+            # Transform text to human-like narration
             human_text = self._transform_to_human_narration(text)
-            self.logger.info("🎙️  Applied human-like narration transformation (SSML)")
+            self.logger.info("🎙️  Applied human-like narration transformation")
             
             # Run async Edge TTS generation with transformed text
             asyncio.run(self._edge_tts_async(human_text, output_path))
