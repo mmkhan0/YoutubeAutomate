@@ -377,34 +377,25 @@ class KidsVoiceoverGenerator:
         """
         Transform script text into HUMAN-LIKE, warm teacher narration with SSML.
         
-        Adds natural elements:
-        - Pauses after sentences and questions
-        - Gentle fillers (Hmm, Okay, Wow)  
-        - Warm encouragement
-        - Emphasis on key learning words
-        - Slower pacing for young children
-        
         Args:
             text: Plain script text
             
         Returns:
-            str: SSML-enhanced human-like narration
+            str: SSML-enhanced human-like narration (plain text + breaks only)
         """
         import re
         import random
         
-        # Step 1: Break long sentences into shorter chunks
-        # Replace periods followed by space with period + break
+        # Add pauses after sentences
         text = re.sub(r'\.\s+', '.<break time="500ms"/> ', text)
         
-        # Step 2: Add pauses after questions (longer breaks)
+        # Add longer pauses after questions
         text = re.sub(r'\?\s+', '?<break time="800ms"/> ', text)
         
-        # Step 3: Add pauses after exclamations
+        # Add pauses after exclamations
         text = re.sub(r'!\s+', '!<break time="600ms"/> ', text)
         
-        # Step 4: Add natural fillers at strategic points
-        # Add "Okay" or "Alright" occasionally between sentences
+        # Add natural fillers and praise between sentences
         sentences = text.split('.')
         enhanced_sentences = []
         
@@ -412,39 +403,33 @@ class KidsVoiceoverGenerator:
             sentence = sentence.strip()
             if not sentence:
                 continue
-                
-            # Add filler before some sentences (not first, not too often)
-            if i > 0 and random.random() < 0.15:  # 15% chance
+            
+            # Add filler occasionally (not first sentence)
+            if i > 0 and random.random() < 0.12:
                 fillers = ['Okay', 'Alright', 'Now', 'So']
-                filler = random.choice(fillers)
-                sentence = f'{filler},<break time="300ms"/> {sentence}'
+                sentence = f'{random.choice(fillers)},<break time="300ms"/> {sentence}'
             
             # Add gentle praise occasionally
-            if i > 0 and random.random() < 0.10:  # 10% chance
-                praise = ['Good', 'Great', 'Nice']
+            if i > 0 and random.random() < 0.08:
+                praise = ['Good', 'Great', 'Nice', 'Well done']
                 sentence = f'{random.choice(praise)}!<break time="400ms"/> {sentence}'
             
             enhanced_sentences.append(sentence)
         
         text = '. '.join(enhanced_sentences)
         
-        # Step 5: Emphasize numbers and learning keywords
-        # Emphasize cardinal numbers
-        text = re.sub(r'\b(one|two|three|four|five|six|seven|eight|nine|ten)\b', 
-                     r'<emphasis level="moderate">\1</emphasis>', text, flags=re.I)
+        # Stretch numbers for emphasis (verbal emphasis)
+        numbers = {
+            'one': 'o n e', 'two': 't w o', 'three': 'th r e e',
+            'four': 'f o u r', 'five': 'f i v e', 'six': 's i x',
+            'seven': 's e v e n', 'eight': 'e i g h t', 
+            'nine': 'n i n e', 'ten': 't e n'
+        }
+        for num, stretched in numbers.items():
+            text = re.sub(rf'\b{num}\b', stretched, text, flags=re.I)
         
-        # Emphasize colors
-        colors = ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'brown', 'black', 'white']
-        for color in colors:
-            text = re.sub(rf'\b{color}\b', 
-                         f'<emphasis level="moderate">{color}</emphasis>', text, flags=re.I)
-        
-        # Step 6: Add natural breathing pauses at commas
+        # Add breathing pauses at commas
         text = re.sub(r',\s*', ',<break time="300ms"/> ', text)
-        
-        # Step 7: Slow down the entire narration for young children
-        # Wrap in prosody tag for overall pacing
-        text = f'<prosody rate="-10%" pitch="+0%">{text}</prosody>'
         
         return text
 
