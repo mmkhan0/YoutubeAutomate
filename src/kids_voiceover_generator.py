@@ -15,11 +15,13 @@ Features:
 
 import logging
 import time
+import asyncio
 from pathlib import Path
 from typing import Optional, List
 from datetime import datetime
 import requests
 from elevenlabs.client import ElevenLabs
+import edge_tts
 
 
 class KidsVoiceoverGenerator:
@@ -42,6 +44,11 @@ class KidsVoiceoverGenerator:
     RACHEL_VOICE_ID = "21m00Tcm4TlvDq8ikWAM"
     # Elli: Young, lively female voice
     ELLI_VOICE_ID = "MF3mGyEYCl7XYWbV9V6O"
+
+    # Edge TTS voices (FREE, unlimited) - Used as fallback when ElevenLabs quota exceeded
+    EDGE_VOICE_FEMALE_CHILD = "en-US-AnaNeural"  # Young, friendly female
+    EDGE_VOICE_FEMALE_FRIENDLY = "en-US-JennyNeural"  # Warm, natural female
+    EDGE_VOICE_FEMALE_STORY = "en-GB-SoniaNeural"  # British storytelling voice
 
     # Voice settings optimized for NATURAL, HUMAN-LIKE speech
     DEFAULT_STABILITY = 0.35      # Lower = more variation = more human (0.3-0.5 recommended)
@@ -174,13 +181,22 @@ class KidsVoiceoverGenerator:
                 return str(output_path)
 
             except Exception as e:
-                self.logger.error(f"Attempt {attempt} failed: {e}")
+                error_msg = str(e)
+                self.logger.error(f"Attempt {attempt} failed: {error_msg}")
+                
+                # Check if quota exceeded - fall back to FREE Edge TTS
+                if "quota_exceeded" in error_msg.lower() or "401" in error_msg:
+                    self.logger.warning("⚠️  ElevenLabs quota exceeded - switching to FREE Edge TTS")
+                    return self._generate_edge_tts(text, output_path)
+                
                 if attempt < self.MAX_RETRIES:
                     delay = self.RETRY_DELAY * attempt
                     self.logger.info(f"Retrying in {delay} seconds...")
                     time.sleep(delay)
                 else:
-                    raise
+                    # Final fallback: try Edge TTS before giving up
+                    self.logger.warning("⚠️  ElevenLabs failed - trying FREE Edge TTS as fallback")
+                    return self._generate_edge_tts(text, output_path)
 
         raise RuntimeError("Voiceover generation failed")
 
@@ -353,6 +369,47 @@ class KidsVoiceoverGenerator:
             return system_ffmpeg
 
         raise FileNotFoundError("FFmpeg not found. Install FFmpeg or set FFMPEG_PATH in config.")
+
+    def _generate_edge_tts(self, text: str, output_path: Path) -> str:
+        """
+        Generate voiceover using FREE Microsoft Edge TTS (unlimited, no API key).
+        
+        This is used as fallback when ElevenLabs quota is exceeded.
+        
+        Args:
+            text: Text to convert to speech
+            output_path: Path to save audio file
+            
+        Returns:
+            str: Path to generated audio file
+        """
+        try:
+            self.logger.info("🆓 Using FREE Edge TTS (Microsoft)")
+            
+            # Run async Edge TTS generation
+            asyncio.run(self._edge_tts_async(text, output_path))
+            
+            if output_path.exists():
+                file_size_mb = output_path.stat().st_size / (1024 * 1024)
+                self.logger.info(f"✓ FREE voiceover generated: {output_path.name} ({file_size_mb:.2f} MB)")
+                return str(output_path)
+            else:
+                raise RuntimeError("Edge TTS failed to create audio file")
+                
+        except Exception as e:
+            self.logger.error(f"Edge TTS generation failed: {e}")
+            raise
+    
+    async def _edge_tts_async(self, text: str, output_path: Path):
+        """Async helper for Edge TTS generation."""
+        # Use child-friendly voice
+        voice = self.EDGE_VOICE_FEMALE_FRIENDLY
+        
+        # Create Edge TTS communicate instance
+        communicate = edge_tts.Communicate(text, voice, rate="-5%", pitch="+5Hz")
+        
+        # Generate and save audio
+        await communicate.save(str(output_path))
 
     def test_api(self) -> bool:
         """

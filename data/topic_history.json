@@ -134,5 +134,29 @@
     "age_group": "2-6 years",
     "language": "English",
     "timestamp": "2026-02-07T01:27:11.779100"
+  },
+  {
+    "topic": "Learning Emotions - Feeling Sad for Kids",
+    "category": "Emotions",
+    "category_key": "emotions",
+    "age_group": "2-6 years",
+    "language": "English",
+    "timestamp": "2026-02-07T01:39:07.408259"
+  },
+  {
+    "topic": "Farm Animals - Meet the Horse | Sounds and Fun",
+    "category": "Animals Sounds",
+    "category_key": "animals_sounds",
+    "age_group": "2-6 years",
+    "language": "English",
+    "timestamp": "2026-02-07T05:55:25.721435"
+  },
+  {
+    "topic": "Tall and Short - Learning Opposites for Toddlers",
+    "category": "Simple Logic",
+    "category_key": "simple_logic",
+    "age_group": "2-6 years",
+    "language": "English",
+    "timestamp": "2026-02-07T12:40:36.537674"
   }
 ]
